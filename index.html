@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Native Mobile Classic</title>
+    <title>North & South: Custom Map (Fixed)</title>
     <style>
         body {
             margin: 0; padding: 0; background-color: #1a1a1a;
@@ -32,9 +32,6 @@
             border: 2px solid rgba(255,255,255,0.2); font-weight: bold; color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3); backdrop-filter: blur(5px);
         }
-        .text-blue { color: #4facfe; }
-        .text-red { color: #ff4757; }
-        .text-yellow { color: #f1c40f; }
 
         /* Mobile Controls */
         #controls {
@@ -44,11 +41,11 @@
         
         .dpad { display: grid; grid-template-columns: 65px 65px 65px; grid-template-rows: 65px 65px 65px; gap: 5px; }
         .btn {
-            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4);
+            background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4);
             border-radius: 15px; display: flex; justify-content: center; align-items: center;
             font-size: 28px; color: white; cursor: pointer; backdrop-filter: blur(4px);
         }
-        .btn:active, .btn.active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
+        .btn:active, .btn.active { background: rgba(255,255,255,0.8); transform: scale(0.95); color: black; }
         .empty { visibility: hidden; }
 
         .actions { display: grid; grid-template-columns: 75px 75px; grid-template-rows: 60px 70px; gap: 10px; }
@@ -61,14 +58,6 @@
         .act-btn:active { transform: scale(0.95); }
         .fire-btn { background: #e74c3c; border-color: #c0392b; grid-column: span 2; font-size: 22px; border-radius: 25px; }
         .fire-btn:active { background: #c0392b; }
-        
-        /* Modal Info */
-        #intro {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85); border: 2px solid #f1c40f; padding: 20px; border-radius: 15px;
-            color: white; text-align: center; z-index: 50; width: 300px;
-        }
-        #intro button { margin-top: 15px; padding: 10px 20px; font-size: 16px; background: #f1c40f; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -77,9 +66,9 @@
         <canvas id="gameCanvas" width="800" height="450"></canvas>
         
         <div class="hud">
-            <div class="badge text-blue">UNION</div>
-            <div class="badge text-yellow" id="squad-hud">Select: INFANTRY</div>
-            <div class="badge text-red">CONFEDERATE</div>
+            <div class="badge" style="color: #4facfe;">UNION</div>
+            <div class="badge" id="squad-hud" style="color: #f1c40f;">Select: INFANTRY</div>
+            <div class="badge" style="color: #ff4757;">CONFEDERATE</div>
         </div>
 
         <div id="controls">
@@ -95,17 +84,15 @@
                 <div class="act-btn fire-btn" id="btn-fire">🔥 FIRE</div>
             </div>
         </div>
-        
-        <div id="intro">
-            <h3 style="margin-top:0; color:#f1c40f;">Cara Bermain (Mode Klasik)</h3>
-            <p style="font-size:14px; text-align:left;">1. Tidak ada deploy. Pasukan sudah di lapangan.<br>2. Pilih regu (INF/CAV/CANNON) di kanan bawah.<br>3. Gerakkan regu pakai D-Pad kiri.<br>4. Tekan FIRE untuk menembak.</p>
-            <button onclick="document.getElementById('intro').style.display='none'">Mulai Perang!</button>
-        </div>
     </div>
 
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+
+    // Load Background Image
+    const bgImage = new Image();
+    bgImage.src = 'image_5.png'; 
 
     // Responsive Canvas
     function resize() {
@@ -116,7 +103,6 @@
 
     // Input Controller
     const keys = { w:false, a:false, s:false, d:false, space:false };
-
     function bind(id, key) {
         const el = document.getElementById(id);
         const press = (e) => { e.preventDefault(); keys[key] = true; el.classList.add('active'); };
@@ -132,33 +118,29 @@
     window.switchSquad = function(type) {
         activeSquad = type;
         document.getElementById('squad-hud').innerText = 'Select: ' + type.toUpperCase();
-        document.getElementById('btn-inf').classList.remove('selected');
-        document.getElementById('btn-cav').classList.remove('selected');
-        document.getElementById('btn-can').classList.remove('selected');
+        document.querySelectorAll('.act-btn').forEach(b => b.classList.remove('selected'));
         document.getElementById('btn-' + type.substring(0,3)).classList.add('selected');
     };
 
     let gameOver = false;
-    let frames = 0;
-    
     const union = { color: '#3498db', cannon: { x: 50, y: 225, alive: true, cd: 0, speed: 2 }, infantry: [], cavalry: [] };
     const confed = { color: '#e74c3c', cannon: { x: 750, y: 225, alive: true, cd: 0, speed: 1.5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
     let projectiles = [], fx = [];
 
     // Initialize units
     function init(team, startX, dir) {
-        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*25*-dir, y: 130 + Math.floor(i/2)*40, speed: 1.5, cd: 0, alive: true });
-        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 70*-dir, y: 150 + i*50, speed: 3.5, alive: true });
+        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*25*-dir, y: 150 + Math.floor(i/2)*40, speed: 1.5, cd: 0, alive: true });
+        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 70*-dir, y: 170 + i*50, speed: 3.5, alive: true });
     }
-    init(union, 120, 1);
-    init(confed, 680, -1);
+    init(union, 150, 1);
+    init(confed, 650, -1);
 
     function moveGroup(group, dx, dy) {
         group.forEach(u => {
             if(u.alive) {
                 u.x += dx * u.speed; u.y += dy * u.speed;
                 if(u.x < 15) u.x = 15; if(u.x > 785) u.x = 785;
-                if(u.y < 20) u.y = 20; if(u.y > 430) u.y = 430;
+                if(u.y < 50) u.y = 50; if(u.y > 400) u.y = 400;
             }
         });
     }
@@ -172,24 +154,20 @@
 
     function update() {
         if(gameOver) return;
-        frames++;
 
         let dx = 0, dy = 0;
         if(keys.w) dy = -1; if(keys.s) dy = 1;
         if(keys.a) dx = -1; if(keys.d) dx = 1;
 
-        // Player Update
         if(activeSquad === 'cannon' && union.cannon.alive) {
             union.cannon.y += dy * union.cannon.speed;
-            if(union.cannon.y < 30) union.cannon.y = 30; if(union.cannon.y > 420) union.cannon.y = 420;
+            if(union.cannon.y < 50) union.cannon.y = 50; if(union.cannon.y > 400) union.cannon.y = 400;
             if(keys.space) fireCannon(union.cannon, true);
         } else if(activeSquad === 'infantry') {
             moveGroup(union.infantry, dx, dy);
-            if(keys.space) {
-                union.infantry.forEach(u => {
-                    if(u.alive && u.cd <= 0) { projectiles.push({ x: u.x+10, y: u.y, vx: 8, type: 'bullet', isUnion: true, life: 40 }); u.cd = 30; }
-                });
-            }
+            if(keys.space) union.infantry.forEach(u => {
+                if(u.alive && u.cd <= 0) { projectiles.push({ x: u.x+10, y: u.y, vx: 8, type: 'bullet', isUnion: true, life: 40 }); u.cd = 30; }
+            });
         } else if(activeSquad === 'cavalry') {
             moveGroup(union.cavalry, dx, dy);
         }
@@ -197,7 +175,7 @@
         if(union.cannon.cd > 0) union.cannon.cd--;
         union.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
 
-        // Simple AI
+        // AI
         confed.aiTimer--;
         if(confed.aiTimer <= 0) {
             let ch = [];
@@ -221,7 +199,7 @@
         if(confed.cannon.cd > 0) confed.cannon.cd--;
         confed.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
 
-        // Physics & Hits
+        // Physics
         for(let i=projectiles.length-1; i>=0; i--) {
             let p = projectiles[i]; p.x += p.vx; p.life--;
             if(p.type === 'ball' && p.life <= 0) {
@@ -241,27 +219,30 @@
         }
         for(let i=fx.length-1; i>=0; i--) { fx[i].r += (40 - fx[i].r)*0.2; fx[i].life--; if(fx[i].life <= 0) fx.splice(i,1); }
 
-        // Melee
+        // Melee (FIXED BUG HERE: Diubah dari `ci.alive = false` ke `cc.alive = false`)
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
             confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 20) ci.alive = false; });
-            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 20) { ci.alive = false; uc.alive = false; }});
+            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 20) { cc.alive = false; uc.alive = false; }});
             if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 25) confed.cannon.alive = false;
         });
 
         // Win Cond
         let uAlive = union.cannon.alive || union.infantry.some(u=>u.alive) || union.cavalry.some(u=>u.alive);
         let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
-        if(!uAlive) { gameOver = true; alert("DEFEAT! Pasukan Union hancur."); }
-        else if(!cAlive) { gameOver = true; alert("VICTORY! Pasukan Confederate hancur."); }
+        if(!uAlive) { gameOver = true; setTimeout(() => alert("DEFEAT! Pasukan Union hancur."), 100); }
+        else if(!cAlive) { gameOver = true; setTimeout(() => alert("VICTORY! Pasukan Confederate hancur."), 100); }
     }
 
     function render() {
         ctx.clearRect(0,0,800,450);
         
-        // Environment (River & Bridges)
-        ctx.fillStyle = "#3498db"; ctx.fillRect(350, 0, 100, 450);
-        ctx.fillStyle = "#8d6e63"; ctx.fillRect(350, 100, 100, 50); ctx.fillRect(350, 300, 100, 50);
+        // DRAW BACKGROUND IMAGE
+        if (bgImage.complete) {
+            ctx.drawImage(bgImage, 0, 0, 800, 450);
+        } else {
+            ctx.fillStyle = "#55a630"; ctx.fillRect(0,0,800,450);
+        }
         
         // Selection Highlight
         ctx.fillStyle = "rgba(241, 196, 15, 0.4)";
@@ -269,12 +250,11 @@
         else if(activeSquad === 'infantry') union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 16, 10, 0, 0, Math.PI*2); ctx.fill(); }});
         else if(activeSquad === 'cavalry') union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 22, 12, 0, 0, Math.PI*2); ctx.fill(); }});
 
-        // Draw Helper
         function drawUnit(u, teamStr, type) {
             if(!u.alive) return;
             let col = teamStr === 'union' ? union.color : confed.color;
             ctx.fillStyle = col;
-            ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+            ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 3;
             
             if(type === 'cannon') {
                 ctx.fillRect(u.x-15, u.y-10, 30, 20); // base
