@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Custom Map (Fixed Fire)</title>
+    <title>North & South: Final Fix</title>
     <style>
+        /* FIX: Gunakan position fixed untuk mencegah address bar browser menutupi game */
         body {
-            margin: 0; padding: 0; background-color: #1a1a1a;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            margin: 0; padding: 0; background-color: #111;
             overflow: hidden; touch-action: none; font-family: 'Segoe UI', Tahoma, sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
             user-select: none; -webkit-user-select: none;
         }
+        
         #game-wrapper {
-            position: relative; width: 100vw; height: 100vh;
+            position: absolute; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
         }
+        
+        /* FIX: Biarkan CSS yang mengatur skala canvas secara otomatis (Letterboxing) */
         canvas {
+            width: 100%; height: 100%; object-fit: contain;
             background-color: #55a630;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            border: 2px solid #333;
         }
         
-        /* UI Panel */
+        /* UI Panel Atas */
         .hud {
             position: absolute; top: 15px; width: 90%; max-width: 800px;
-            display: flex; justify-content: space-between; z-index: 10;
-            pointer-events: none;
+            display: flex; justify-content: space-between; z-index: 10; pointer-events: none;
         }
         .badge {
             background: rgba(0,0,0,0.7); padding: 8px 20px; border-radius: 20px;
@@ -33,7 +35,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3); backdrop-filter: blur(5px);
         }
 
-        /* Mobile Controls */
+        /* Mobile Controls (Posisi absolut ke bawah layar fixed) */
         #controls {
             position: absolute; bottom: 20px; width: 95%; max-width: 850px;
             display: flex; justify-content: space-between; align-items: flex-end; z-index: 20;
@@ -48,13 +50,8 @@
         .btn:active, .btn.active { background: rgba(255,255,255,0.9); transform: scale(0.95); color: black; }
         .empty { visibility: hidden; }
 
-        /* Panel Kanan Diperbaiki */
-        .actions { 
-            display: flex; flex-direction: column; gap: 10px; width: 160px;
-        }
-        .squad-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        }
+        .actions { display: flex; flex-direction: column; gap: 10px; width: 150px; }
+        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .act-btn {
             background: #2c3e50; border: 2px solid #7f8c8d; border-radius: 12px; color: white;
             font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center;
@@ -66,11 +63,26 @@
         
         .fire-btn { 
             background: #e74c3c; border: 3px solid #ff7675; border-radius: 20px; 
-            font-size: 20px; height: 60px; 
+            font-size: 20px; height: 60px; display: flex; justify-content: center; align-items: center;
+            color: white; font-weight: bold; cursor: pointer;
         }
         .fire-btn:active, .fire-btn.active { background: #c0392b; border-color: #e74c3c; transform: scale(0.95); }
 
-        @media (max-width: 600px) {
+        /* MODAL GAME OVER (PLAY AGAIN) */
+        #game-over-modal {
+            display: none; position: absolute; z-index: 100;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85); border: 3px solid #f1c40f; border-radius: 15px;
+            padding: 30px; text-align: center; color: white; width: 250px;
+        }
+        #btn-restart {
+            margin-top: 20px; padding: 12px 20px; background: #f1c40f; color: #111;
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5); width: 100%;
+        }
+        #btn-restart:active { transform: scale(0.95); }
+
+        @media (max-width: 650px) {
             .dpad { grid-template-columns: 50px 50px 50px; grid-template-rows: 50px 50px 50px; }
             .actions { width: 140px; }
             .act-btn { height: 40px; font-size: 12px; }
@@ -103,8 +115,14 @@
                     <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
                     <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON</div>
                 </div>
-                <div class="act-btn fire-btn" id="btn-fire">🔥 FIRE</div>
+                <div class="fire-btn" id="btn-fire">🔥 FIRE</div>
             </div>
+        </div>
+        
+        <!-- MODAL PLAY AGAIN -->
+        <div id="game-over-modal">
+            <h2 id="game-over-msg" style="margin-top: 0;">Victory!</h2>
+            <button id="btn-restart" onclick="resetGame()">Play Again</button>
         </div>
     </div>
 
@@ -113,15 +131,9 @@
     const ctx = canvas.getContext("2d");
 
     const bgImage = new Image();
-    bgImage.src = 'image_5.png'; 
+    bgImage.src = 'image_5.png'; // Map Background
 
-    function resize() {
-        let scale = Math.min(window.innerWidth / 800, window.innerHeight / 450);
-        canvas.style.transform = `scale(${scale})`;
-    }
-    window.addEventListener('resize', resize); resize();
-
-    // Input Controller (Mouse, Touch, & Keyboard Support)
+    // Input Controller
     const keys = { w:false, a:false, s:false, d:false, space:false };
     
     function bindBtn(id, key) {
@@ -129,32 +141,12 @@
         if(!el) return;
         const press = (e) => { e.preventDefault(); keys[key] = true; el.classList.add('active'); };
         const release = (e) => { e.preventDefault(); keys[key] = false; el.classList.remove('active'); };
-        
-        el.addEventListener('touchstart', press, {passive: false});
-        el.addEventListener('touchend', release, {passive: false});
-        el.addEventListener('mousedown', press); 
-        el.addEventListener('mouseup', release); 
-        el.addEventListener('mouseleave', release);
+        el.addEventListener('touchstart', press, {passive: false}); el.addEventListener('touchend', release, {passive: false});
+        el.addEventListener('mousedown', press); el.addEventListener('mouseup', release); el.addEventListener('mouseleave', release);
     }
-    bindBtn('btn-up', 'w'); bindBtn('btn-down', 's'); bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd'); 
-    bindBtn('btn-fire', 'space');
+    bindBtn('btn-up', 'w'); bindBtn('btn-down', 's'); bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd'); bindBtn('btn-fire', 'space');
 
-    // Keyboard bindings untuk testing di PC
-    window.addEventListener('keydown', (e) => {
-        if(e.key === 'w' || e.key === 'ArrowUp') keys.w = true;
-        if(e.key === 's' || e.key === 'ArrowDown') keys.s = true;
-        if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = true;
-        if(e.key === 'd' || e.key === 'ArrowRight') keys.d = true;
-        if(e.key === ' ' || e.code === 'Space') keys.space = true;
-    });
-    window.addEventListener('keyup', (e) => {
-        if(e.key === 'w' || e.key === 'ArrowUp') keys.w = false;
-        if(e.key === 's' || e.key === 'ArrowDown') keys.s = false;
-        if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = false;
-        if(e.key === 'd' || e.key === 'ArrowRight') keys.d = false;
-        if(e.key === ' ' || e.code === 'Space') keys.space = false;
-    });
-
+    // State Game
     let activeSquad = 'infantry';
     window.switchSquad = function(type) {
         activeSquad = type;
@@ -164,16 +156,30 @@
     };
 
     let gameOver = false;
-    const union = { color: '#3498db', cannon: { x: 50, y: 225, alive: true, cd: 0, speed: 2 }, infantry: [], cavalry: [] };
-    const confed = { color: '#e74c3c', cannon: { x: 750, y: 225, alive: true, cd: 0, speed: 1.5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
-    let projectiles = [], fx = [];
+    let union, confed, projectiles, fx;
 
     function init(team, startX, dir) {
         for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*25*-dir, y: 150 + Math.floor(i/2)*40, speed: 1.5, cd: 0, alive: true });
         for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 70*-dir, y: 170 + i*50, speed: 3.5, alive: true });
     }
-    init(union, 150, 1);
-    init(confed, 650, -1);
+
+    // Fungsi Reset Game (Play Again)
+    window.resetGame = function() {
+        document.getElementById('game-over-modal').style.display = 'none';
+        
+        union = { color: '#3498db', cannon: { x: 50, y: 225, alive: true, cd: 0, speed: 2 }, infantry: [], cavalry: [] };
+        confed = { color: '#e74c3c', cannon: { x: 750, y: 225, alive: true, cd: 0, speed: 1.5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
+        projectiles = []; fx = [];
+        
+        init(union, 150, 1);
+        init(confed, 650, -1);
+        
+        gameOver = false;
+        keys.space = false; // Hindari tembakan otomatis saat reset
+    };
+
+    // Panggil reset pertama kali untuk inisialisasi awal
+    resetGame();
 
     function moveGroup(group, dx, dy) {
         group.forEach(u => {
@@ -199,7 +205,6 @@
         if(keys.w) dy = -1; if(keys.s) dy = 1;
         if(keys.a) dx = -1; if(keys.d) dx = 1;
 
-        // Player actions
         if(activeSquad === 'cannon' && union.cannon.alive) {
             union.cannon.y += dy * union.cannon.speed;
             if(union.cannon.y < 50) union.cannon.y = 50; if(union.cannon.y > 400) union.cannon.y = 400;
@@ -271,21 +276,24 @@
             if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 25) confed.cannon.alive = false;
         });
 
-        // Cek Pemenang
+        // Cek Pemenang (Panggil Layar Game Over)
         let uAlive = union.cannon.alive || union.infantry.some(u=>u.alive) || union.cavalry.some(u=>u.alive);
         let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
-        if(!uAlive) { gameOver = true; setTimeout(() => alert("DEFEAT! Pasukan Union hancur."), 100); }
-        else if(!cAlive) { gameOver = true; setTimeout(() => alert("VICTORY! Pasukan Confederate hancur."), 100); }
+        
+        if(!uAlive || !cAlive) {
+            gameOver = true;
+            const modal = document.getElementById('game-over-modal');
+            const msg = document.getElementById('game-over-msg');
+            msg.innerHTML = !uAlive ? "DEFEAT!<br><span style='font-size:14px'>Pasukan Union Hancur</span>" : "VICTORY!<br><span style='font-size:14px'>Pasukan Confederate Hancur</span>";
+            msg.style.color = !uAlive ? "#e74c3c" : "#2ecc71";
+            modal.style.display = "block";
+        }
     }
 
     function render() {
         ctx.clearRect(0,0,800,450);
-        
-        if (bgImage.complete) {
-            ctx.drawImage(bgImage, 0, 0, 800, 450);
-        } else {
-            ctx.fillStyle = "#55a630"; ctx.fillRect(0,0,800,450);
-        }
+        if (bgImage.complete) ctx.drawImage(bgImage, 0, 0, 800, 450);
+        else { ctx.fillStyle = "#55a630"; ctx.fillRect(0,0,800,450); }
         
         ctx.fillStyle = "rgba(241, 196, 15, 0.4)";
         if(activeSquad === 'cannon' && union.cannon.alive) ctx.fillRect(union.cannon.x-25, union.cannon.y-20, 50, 40);
