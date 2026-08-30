@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Pro Stages (Bug Fixes)</title>
+    <title>North & South: Arcade Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
@@ -18,6 +18,7 @@
         #game-wrapper {
             position: absolute; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
+            background: #111;
         }
         
         canvas {
@@ -83,19 +84,50 @@
         }
         .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(8px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
 
-        /* MODAL GAME OVER / NEXT STAGE */
+        /* =========================================================
+           MODAL CARTOONY ARCADE (GAME OVER & NEXT STAGE) 
+           ========================================================= */
+        #game-over-overlay {
+            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 90;
+        }
         #game-over-modal {
-            display: none; position: absolute; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: linear-gradient(to bottom, #34495e, #2c3e50); border: 6px solid #f1c40f; border-radius: 25px;
-            padding: 40px; text-align: center; color: white; width: 300px; box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            display: none; position: absolute; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+            background: linear-gradient(to bottom, #f4d03f, #f39c12); 
+            border: 8px solid #5d4037; border-radius: 35px;
+            padding: 40px 30px 30px; text-align: center; width: 320px; 
+            box-shadow: 0 15px 0 #3e2723, 0 25px 40px rgba(0,0,0,0.8);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        #game-over-msg { font-size: 32px; text-shadow: 2px 2px 0 #000; letter-spacing: 2px; margin-top: 0; }
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        /* Garis putus-putus manis di dalam box */
+        #game-over-modal::before {
+            content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 4px dashed rgba(255,255,255,0.4); border-radius: 20px; pointer-events: none;
+        }
+        
+        #game-over-msg { 
+            font-size: 42px; margin: 0 0 5px 0; color: #fff;
+            transform: rotate(-3deg); line-height: 1.1;
+        }
+        
+        .msg-sub {
+            background: rgba(255,255,255,0.8); color: #5d4037; font-family: sans-serif;
+            font-weight: 900; font-size: 16px; padding: 5px 15px; border-radius: 15px;
+            display: inline-block; margin-bottom: 25px; text-transform: uppercase;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
         #btn-action {
-            margin-top: 25px; padding: 15px 20px; background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff;
-            border: 4px solid #2c3e50; border-radius: 15px; font-size: 20px; cursor: pointer; width: 100%;
-            box-shadow: 0 6px 0 #d35400; text-shadow: 1px 1px 0 #d35400; font-family: 'Fredoka One', cursive;
+            padding: 18px 20px; color: #fff; border-radius: 20px; font-size: 22px; 
+            cursor: pointer; width: 100%; position: relative; z-index: 2;
+            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+            transition: all 0.1s; letter-spacing: 1px;
         }
-        #btn-action:active { transform: translateY(6px); box-shadow: 0 0 0 #d35400; }
+        #btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
 
         @media (max-width: 750px) {
             .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
@@ -106,6 +138,8 @@
             .badge { padding: 5px 15px; font-size: 11px; }
             .stage-badge { font-size: 16px; padding: 5px 15px; }
             #ammo-badge { width: 18px; height: 18px; font-size: 10px; }
+            #game-over-modal { width: 280px; padding: 30px 20px; border-width: 6px; }
+            #game-over-msg { font-size: 32px; }
         }
     </style>
 </head>
@@ -136,43 +170,64 @@
             </div>
         </div>
         
+        <div id="game-over-overlay"></div>
         <div id="game-over-modal">
-            <h2 id="game-over-msg">STAGE CLEARED</h2>
+            <h2 id="game-over-msg">CLEARED!</h2>
+            <div class="msg-sub" id="msg-sub">Get ready</div>
             <button id="btn-action" onclick="handleModalAction()">NEXT STAGE</button>
         </div>
     </div>
 
 <script>
-    // --- SFX AUDIO ENGINE ---
+    // --- ADVANCED SFX AUDIO ENGINE ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const actx = new AudioContext();
 
     function playSound(type) {
         if (actx.state === 'suspended') actx.resume();
-        const osc = actx.createOscillator(); const gain = actx.createGain();
-        osc.connect(gain); gain.connect(actx.destination);
         let now = actx.currentTime;
         
         if (type === 'click') {
-            osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
-            gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
+            let o = actx.createOscillator(); let g = actx.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+            g.gain.setValueAtTime(0.5, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + 0.1);
         } else if (type === 'empty') { 
-            osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(750, now + 0.1);
-            gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
+            let o = actx.createOscillator(); let g = actx.createGain();
+            o.type = 'square'; o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(750, now + 0.1);
+            g.gain.setValueAtTime(0.2, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + 0.1);
         } else if (type === 'shoot') {
-            osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
-            gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now); osc.stop(now + 0.2);
+            let o = actx.createOscillator(); let g = actx.createGain();
+            o.type = 'square'; o.frequency.setValueAtTime(150, now);
+            g.gain.setValueAtTime(0.2, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + 0.2);
         } else if (type === 'cannon') { 
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.exponentialRampToValueAtTime(10, now + 0.6);
-            gain.gain.setValueAtTime(0.8, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-            osc.start(now); osc.stop(now + 0.6);
+            let o = actx.createOscillator(); let g = actx.createGain();
+            o.type = 'sawtooth'; o.frequency.setValueAtTime(100, now); o.frequency.exponentialRampToValueAtTime(10, now + 0.6);
+            g.gain.setValueAtTime(0.7, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + 0.6);
         } else if (type === 'hitRock') {
-            osc.type = 'triangle'; osc.frequency.setValueAtTime(80, now); osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
-            gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            osc.start(now); osc.stop(now + 0.3);
+            let o = actx.createOscillator(); let g = actx.createGain();
+            o.type = 'triangle'; o.frequency.setValueAtTime(80, now); o.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+            g.gain.setValueAtTime(0.5, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + 0.3);
+        } else if (type === 'victory') {
+            // Nada bahagia (Arpeggio Naik)
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => { 
+                let o = actx.createOscillator(); let g = actx.createGain();
+                o.type = 'square'; o.frequency.value = freq;
+                g.gain.setValueAtTime(0, now + i*0.15); g.gain.linearRampToValueAtTime(0.2, now + i*0.15 + 0.05); g.gain.exponentialRampToValueAtTime(0.01, now + i*0.15 + 0.3);
+                o.connect(g); g.connect(actx.destination); o.start(now + i*0.15); o.stop(now + i*0.15 + 0.3);
+            });
+        } else if (type === 'defeat') {
+            // Nada sedih (Turun)
+            [400, 350, 300, 200].forEach((freq, i) => { 
+                let o = actx.createOscillator(); let g = actx.createGain();
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(freq, now + i*0.3); o.frequency.exponentialRampToValueAtTime(freq - 50, now + i*0.3 + 0.3);
+                g.gain.setValueAtTime(0.3, now + i*0.3); g.gain.exponentialRampToValueAtTime(0.01, now + i*0.3 + 0.3);
+                o.connect(g); g.connect(actx.destination); o.start(now + i*0.3); o.stop(now + i*0.3 + 0.3);
+            });
         }
     }
 
@@ -268,7 +323,10 @@
     }
 
     function startStage(stage) {
-        playSound('click'); document.getElementById('game-over-modal').style.display = 'none';
+        playSound('click'); 
+        document.getElementById('game-over-modal').style.display = 'none';
+        document.getElementById('game-over-overlay').style.display = 'none';
+        
         currentStage = stage; document.getElementById('stage-hud').innerText = 'STAGE ' + currentStage;
         
         let times = ['day', 'sunset', 'night']; timeOfDay = times[(currentStage - 1) % 3];
@@ -285,6 +343,10 @@
 
         initTeam(union, 250, 1, 6, 3); initTeam(confed, 1030, -1, extraInf, extraCav); 
         gameOver = false; keys.space = false;
+        
+        // Buat animasi kemunculan ulang modal dengan me-reset animation
+        let modal = document.getElementById('game-over-modal');
+        modal.style.animation = 'none'; modal.offsetHeight; modal.style.animation = null;
     }
 
     startStage(1);
@@ -317,7 +379,7 @@
     function fireCannon(cannon, isUnion) {
         if(cannon.cd <= 0 && cannon.alive) {
             if (cannon.ammo > 0) {
-                playSound('shoot');
+                playSound('cannon');
                 projectiles.push({ x: isUnion ? cannon.x+40 : cannon.x-40, y: cannon.y-25, vx: isUnion ? 9 : -9, type: 'ball', isUnion: isUnion, life: 120 });
                 fx.push({ x: isUnion ? cannon.x+45 : cannon.x-45, y: cannon.y-25, type: 'flash', life: 5 }); 
                 cannon.cd = 90; cannon.ammo--;
@@ -394,7 +456,7 @@
         if(confed.cannon.cd > 0) confed.cannon.cd--;
         confed.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
 
-        // --- PHYSICS & COLLISION FIX ---
+        // Physics
         for(let i=projectiles.length-1; i>=0; i--) {
             let p = projectiles[i]; p.x += p.vx; p.life--;
             let eTeam = p.isUnion ? confed : union;
@@ -430,18 +492,14 @@
                 let hit = false;
                 eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18) { u.alive = false; hit = true; }});
                 eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { u.alive = false; hit = true; }});
-                
-                // BUG FIX: Peluru senapan sekarang bisa merusak/menghancurkan meriam!
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
-                    eTeam.cannon.alive = false; hit = true; 
-                    fx.push({x: eTeam.cannon.x, y: eTeam.cannon.y, type:'smoke', life:25}); 
+                    eTeam.cannon.alive = false; hit = true; fx.push({x: eTeam.cannon.x, y: eTeam.cannon.y, type:'smoke', life:25}); 
                 }
 
                 if(hit) { fx.push({x: p.x, y: p.y, type: 'smoke', life: 10}); projectiles.splice(i, 1);
                 } else if(p.life <= 0) projectiles.splice(i, 1);
             }
         }
-
         for(let i=fx.length-1; i>=0; i--) { 
             let f = fx[i];
             if(f.type === 'boom') f.r += (70 - f.r)*0.15;
@@ -450,55 +508,73 @@
             if(f.life <= 0) fx.splice(i,1); 
         }
 
-        // --- BUG FIX MELEE CLASH ---
+        // Melee Clash
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
             confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 35) { ci.alive = false; fx.push({x: ci.x, y: ci.y, type:'smoke', life: 15}); }});
             confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 35) { cc.alive = false; uc.alive = false; fx.push({x: cc.x, y: cc.y, type:'smoke', life: 20}); }});
             if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 45) { confed.cannon.alive = false; fx.push({x: confed.cannon.x, y: confed.cannon.y, type:'smoke', life: 25}); }
         });
-
-        // BUG FIX: Kuda musuh sekarang BISA menghancurkan infantri dan meriam milikmu
         confed.cavalry.forEach(cc => {
             if(!cc.alive) return;
             union.infantry.forEach(ui => { if(ui.alive && Math.hypot(cc.x-ui.x, cc.y-ui.y) < 35) { ui.alive = false; fx.push({x: ui.x, y: ui.y, type:'smoke', life: 15}); }});
             if(union.cannon.alive && Math.hypot(cc.x-union.cannon.x, cc.y-union.cannon.y) < 45) { union.cannon.alive = false; fx.push({x: union.cannon.x, y: union.cannon.y, type:'smoke', life: 25}); }
         });
 
-        // Cek Pemenang
+        // Win Cond
         let uInfAlive = union.infantry.some(u=>u.alive); let uCavAlive = union.cavalry.some(u=>u.alive);
         let cInfAlive = confed.infantry.some(u=>u.alive); let cCavAlive = confed.cavalry.some(u=>u.alive);
         
         let uAlive = union.cannon.alive || uInfAlive || uCavAlive;
         let cAlive = confed.cannon.alive || cInfAlive || cCavAlive;
         
-        // BUG FIX: Deteksi Draw (Keduanya sisa meriam dengan peluru habis)
         let uOnlyCannon = union.cannon.alive && !uInfAlive && !uCavAlive;
         let cOnlyCannon = confed.cannon.alive && !cInfAlive && !cCavAlive;
         let isDraw = uOnlyCannon && cOnlyCannon && union.cannon.ammo === 0 && confed.cannon.ammo === 0;
         
         if(!uAlive || !cAlive || isDraw) {
             gameOver = true;
-            playSound('cannon');
+            
+            const overlay = document.getElementById('game-over-overlay');
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
+            const sub = document.getElementById('msg-sub');
             const btn = document.getElementById('btn-action');
             
             if (isDraw) {
+                playSound('victory');
                 isVictory = true; 
-                msg.innerHTML = "DRAW!<br><span style='font-size:16px; font-family:sans-serif;'>Out of Ammo! Proceeding...</span>";
-                msg.style.color = "#f1c40f"; btn.innerText = "NEXT STAGE";
+                msg.innerHTML = "DRAW!";
+                msg.style.textShadow = "3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 8px 0 #935116";
+                sub.innerText = "Out of Ammo!";
+                btn.innerText = "NEXT STAGE";
+                btn.style.background = "linear-gradient(to bottom, #f1c40f, #f39c12)";
+                btn.style.boxShadow = "0 8px 0 #d35400"; btn.style.borderColor = "#d35400";
             } else {
                 isVictory = !cAlive && uAlive; 
                 if (isVictory) {
-                    msg.innerHTML = "STAGE CLEARED!<br><span style='font-size:16px; font-family:sans-serif;'>Get ready for next wave</span>";
-                    msg.style.color = "#2ecc71"; btn.innerText = "NEXT STAGE";
+                    playSound('victory');
+                    msg.innerHTML = "STAGE<br>CLEARED!";
+                    msg.style.textShadow = "3px 3px 0 #27ae60, -2px -2px 0 #27ae60, 2px -2px 0 #27ae60, -2px 2px 0 #27ae60, 0 8px 0 #145a32";
+                    sub.innerText = "Awesome Victory";
+                    btn.innerText = "NEXT STAGE";
+                    btn.style.background = "linear-gradient(to bottom, #2ecc71, #27ae60)";
+                    btn.style.boxShadow = "0 8px 0 #145a32"; btn.style.borderColor = "#145a32";
                 } else {
-                    msg.innerHTML = "DEFEAT!<br><span style='font-size:16px; font-family:sans-serif;'>Union Destroyed</span>";
-                    msg.style.color = "#e74c3c"; btn.innerText = "RETRY STAGE";
+                    playSound('defeat');
+                    msg.innerHTML = "DEFEAT!";
+                    msg.style.textShadow = "3px 3px 0 #c0392b, -2px -2px 0 #c0392b, 2px -2px 0 #c0392b, -2px 2px 0 #c0392b, 0 8px 0 #78281f";
+                    sub.innerText = "Union Destroyed";
+                    btn.innerText = "RETRY STAGE";
+                    btn.style.background = "linear-gradient(to bottom, #e74c3c, #c0392b)";
+                    btn.style.boxShadow = "0 8px 0 #78281f"; btn.style.borderColor = "#78281f";
                 }
             }
+            overlay.style.display = "block";
             modal.style.display = "block";
+            
+            // Re-trigger animation
+            modal.style.animation = 'none'; modal.offsetHeight; modal.style.animation = null;
         }
     }
 
@@ -523,6 +599,7 @@
         ctx.moveTo(x - w/2, y - h); ctx.lineTo(x - w/2 + d, y - h - d); ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2, y - h); ctx.fill();
         ctx.fillStyle = gradR; ctx.beginPath();
         ctx.moveTo(x + w/2, y - h); ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2 + d, y - d); ctx.lineTo(x + w/2, y); ctx.fill();
+        
         ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1; ctx.strokeRect(x - w/2, y - h, w, h);
     }
 
