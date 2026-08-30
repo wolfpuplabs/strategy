@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Pro Cartoon Edition</title>
+    <title>North & South: Pro Cartoon Edition (Cannon Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
@@ -11,7 +11,7 @@
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             margin: 0; padding: 0; background-color: #2c3e50;
             overflow: hidden; touch-action: none; 
-            font-family: 'Fredoka One', cursive, sans-serif; /* Font Baru */
+            font-family: 'Fredoka One', cursive, sans-serif;
             user-select: none; -webkit-user-select: none;
         }
         
@@ -25,7 +25,7 @@
             background-color: #7bc05b;
         }
         
-        /* UI Panel Atas Bergaya Kayu/Metal Kartun */
+        /* HUD Atas */
         .hud {
             position: absolute; top: 15px; width: 95%; max-width: 900px;
             display: flex; justify-content: space-between; z-index: 10; pointer-events: none;
@@ -46,7 +46,6 @@
             display: flex; justify-content: space-between; align-items: flex-end; z-index: 20;
         }
         
-        /* D-Pad Bulat Tebal */
         .dpad { display: grid; grid-template-columns: 65px 65px 65px; grid-template-rows: 65px 65px 65px; gap: 8px; }
         .dpad-btn {
             background: linear-gradient(to bottom, #ffffff, #dcdde1);
@@ -61,7 +60,6 @@
         }
         .empty { visibility: hidden; }
 
-        /* Panel Pasukan Kanan */
         .actions { display: flex; align-items: flex-end; gap: 20px; }
         .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 180px; }
         .act-btn {
@@ -79,7 +77,6 @@
         .act-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #1a252f; }
         .btn-full { grid-column: span 2; }
         
-        /* Tombol Tembak Premium */
         .fire-btn { 
             background: linear-gradient(to bottom, #ff7675, #e74c3c); 
             border: 5px solid #2c3e50; border-radius: 50%; 
@@ -92,7 +89,6 @@
             background: #c0392b; transform: translateY(8px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f;
         }
 
-        /* MODAL GAME OVER */
         #game-over-modal {
             display: none; position: absolute; z-index: 100;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -155,29 +151,28 @@
     </div>
 
 <script>
-    // --- SFX AUDIO ENGINE (No external files needed) ---
+    // --- SFX AUDIO ENGINE ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const actx = new AudioContext();
 
     function playSound(type) {
         if (actx.state === 'suspended') actx.resume();
-        const osc = actx.createOscillator();
-        const gain = actx.createGain();
+        const osc = actx.createOscillator(); const gain = actx.createGain();
         osc.connect(gain); gain.connect(actx.destination);
-
         let now = actx.currentTime;
+        
         if (type === 'click') {
             osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
             gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             osc.start(now); osc.stop(now + 0.1);
         } else if (type === 'shoot') {
-            osc.type = 'square'; osc.frequency.setValueAtTime(150, now); // Retro noise approximation
+            osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
             gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
             osc.start(now); osc.stop(now + 0.2);
-        } else if (type === 'cannon') {
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(20, now + 0.5);
-            gain.gain.setValueAtTime(0.6, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            osc.start(now); osc.stop(now + 0.5);
+        } else if (type === 'cannon') { // Suara ledakan menggelegar
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, now); osc.frequency.exponentialRampToValueAtTime(10, now + 0.6);
+            gain.gain.setValueAtTime(0.7, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            osc.start(now); osc.stop(now + 0.6);
         }
     }
 
@@ -198,7 +193,7 @@
         if(!el) return;
         const press = (e) => { 
             e.preventDefault(); keys[key] = true; el.classList.add('active'); 
-            if(key !== 'w' && key !== 'a' && key !== 's' && key !== 'd' && key !== 'space') playSound('click');
+            if(!['w','a','s','d','space'].includes(key)) playSound('click');
         };
         const release = (e) => { e.preventDefault(); keys[key] = false; el.classList.remove('active'); };
         el.addEventListener('touchstart', press, {passive: false}); el.addEventListener('touchend', release, {passive: false});
@@ -244,7 +239,6 @@
     let gameOver = false, frames = 0;
     let union, confed, projectiles, fx;
 
-    // DIPERLAMBAT: Semua kecepatan dikurangi sekitar 40-50%
     function init(team, startX, dir) {
         for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*40*-dir, y: 150 + Math.floor(i/2)*80, speed: 1.5, cd: 0, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
         for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 110*-dir, y: 180 + i*90, speed: 2.8, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
@@ -253,7 +247,6 @@
     window.resetGame = function() {
         playSound('click');
         document.getElementById('game-over-modal').style.display = 'none';
-        // DIPERLAMBAT: Kecepatan Cannon Union & Confed
         union = { color: '#2980b9', pants: '#1c5982', cannon: { x: 100, y: 350, alive: true, cd: 0, speed: 1.8, frame:0 }, infantry: [], cavalry: [] };
         confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: 1.5, frame:0 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
         projectiles = []; fx = [];
@@ -277,7 +270,6 @@
                     else if (u.y > bc + 10) u.y -= u.speed;
                 }
                 
-                // VFX Debu Langkah
                 if(moved && (dx!==0 || dy!==0)) {
                     u.frame += 0.5;
                     if(frames % 10 === 0 && Math.random() < 0.5) fx.push({ x: u.x, y: u.y+5, type: 'dust', life: 15 });
@@ -288,11 +280,10 @@
 
     function fireCannon(cannon, isUnion) {
         if(cannon.cd <= 0 && cannon.alive) {
-            playSound('cannon');
-            // Kecepatan peluru meriam dikurangi
-            projectiles.push({ x: isUnion ? cannon.x+40 : cannon.x-40, y: cannon.y-25, vx: isUnion ? 9 : -9, type: 'ball', isUnion: isUnion, life: 120 });
-            fx.push({ x: isUnion ? cannon.x+45 : cannon.x-45, y: cannon.y-25, type: 'flash', life: 5 }); // Muzzle flash
-            cannon.cd = 90; // Reload lebih lama
+            playSound('shoot'); // Bunyi lontaran
+            projectiles.push({ x: isUnion ? cannon.x+40 : cannon.x-40, y: cannon.y-25, vx: isUnion ? 10 : -10, type: 'ball', isUnion: isUnion, life: 120 });
+            fx.push({ x: isUnion ? cannon.x+45 : cannon.x-45, y: cannon.y-25, type: 'flash', life: 5 }); 
+            cannon.cd = 60; // Reload dipercepat jadi 60 frame (1 detik)
         }
     }
 
@@ -316,7 +307,6 @@
                 let shotFired = false;
                 union.infantry.forEach(u => {
                     if(u.alive && u.cd <= 0) { 
-                        // Kecepatan peluru senapan dikurangi
                         projectiles.push({ x: u.x+20, y: u.y-25, vx: 10, type: 'bullet', isUnion: true, life: 70 }); 
                         fx.push({ x: u.x+25, y: u.y-25, type: 'flash', life: 4 });
                         u.cd = 40; shotFired = true;
@@ -366,27 +356,36 @@
         if(confed.cannon.cd > 0) confed.cannon.cd--;
         confed.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
 
-        // Physics
+        // --- PHYSICS & COLLISION FIX (Meriam Mematikan) ---
         for(let i=projectiles.length-1; i>=0; i--) {
             let p = projectiles[i]; p.x += p.vx; p.life--;
             
-            // Trail untuk cannonball
-            if(p.type === 'ball' && frames%3===0) fx.push({x: p.x, y: p.y, type:'smoke', life: 10});
+            if(p.type === 'ball' && frames%2===0) fx.push({x: p.x, y: p.y, type:'smoke', life: 12});
 
-            if(p.type === 'ball' && p.life <= 0) {
-                playSound('cannon'); // Reuse sound for boom
-                fx.push({ x: p.x, y: p.y, type: 'boom', r: 0, life: 30 });
-                // Serpihan ledakan
-                for(let k=0; k<5; k++) fx.push({ x: p.x, y: p.y, type: 'debris', vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 20 });
-                
-                let eTeam = p.isUnion ? confed : union;
-                eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 65) u.alive = false; });
-                eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 65) u.alive = false; });
-                if(eTeam.cannon.alive && Math.hypot(eTeam.cannon.x-p.x, eTeam.cannon.y-p.y) < 75) eTeam.cannon.alive = false;
-                projectiles.splice(i, 1); continue;
+            let eTeam = p.isUnion ? confed : union;
+
+            if(p.type === 'ball') {
+                // Detonasi Sentuh (Meledak jika mengenai hitbox musuh di tengah penerbangan)
+                let directHit = false;
+                eTeam.infantry.forEach(u => { if(!directHit && u.alive && Math.abs(u.x-p.x) < 30 && Math.abs(u.y-p.y) < 35) directHit = true; });
+                eTeam.cavalry.forEach(u => { if(!directHit && u.alive && Math.abs(u.x-p.x) < 40 && Math.abs(u.y-p.y) < 40) directHit = true; });
+                if(!directHit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x) < 50 && Math.abs(eTeam.cannon.y-p.y) < 50) directHit = true;
+
+                if(p.life <= 0 || directHit) {
+                    playSound('cannon'); // Suara ledakan menggelegar
+                    fx.push({ x: p.x, y: p.y, type: 'boom', r: 0, life: 35 });
+                    for(let k=0; k<8; k++) fx.push({ x: p.x, y: p.y, type: 'debris', vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 25 });
+                    
+                    // Radius ledakan (AOE) sangat besar!
+                    eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 85) { u.alive = false; fx.push({x: u.x, y: u.y, type:'smoke', life:15}); }});
+                    eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 95) { u.alive = false; fx.push({x: u.x, y: u.y, type:'smoke', life:15}); }});
+                    if(eTeam.cannon.alive && Math.hypot(eTeam.cannon.x-p.x, eTeam.cannon.y-p.y) < 100) { eTeam.cannon.alive = false; fx.push({x: eTeam.cannon.x, y: eTeam.cannon.y, type:'smoke', life:25}); }
+                    
+                    projectiles.splice(i, 1); continue;
+                }
             }
-            if(p.type === 'bullet') {
-                let hit = false; let eTeam = p.isUnion ? confed : union;
+            else if(p.type === 'bullet') {
+                let hit = false;
                 eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18) { u.alive = false; hit = true; }});
                 eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { u.alive = false; hit = true; }});
                 if(hit) {
@@ -395,9 +394,11 @@
                 } else if(p.life <= 0) projectiles.splice(i, 1);
             }
         }
+
+        // Efek
         for(let i=fx.length-1; i>=0; i--) { 
             let f = fx[i];
-            if(f.type === 'boom') f.r += (60 - f.r)*0.15;
+            if(f.type === 'boom') f.r += (70 - f.r)*0.15;
             else if(f.type === 'debris') { f.x += f.vx; f.y += f.vy; }
             f.life--; 
             if(f.life <= 0) fx.splice(i,1); 
@@ -416,7 +417,7 @@
         let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
         if(!uAlive || !cAlive) {
             gameOver = true;
-            playSound('cannon'); // Victory/Defeat sound
+            playSound('cannon'); // Bunyi besar game over
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
             msg.innerHTML = !uAlive ? "DEFEAT!<br><span style='font-size:16px; font-family:sans-serif;'>Union Destroyed</span>" : "VICTORY!<br><span style='font-size:16px; font-family:sans-serif;'>Confederate Defeated</span>";
@@ -524,14 +525,14 @@
         });
         fx.forEach(f => {
             if(f.type === 'boom') {
-                ctx.fillStyle = `rgba(231, 76, 60, ${f.life/30})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = `rgba(241, 196, 15, ${f.life/30})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = `rgba(231, 76, 60, ${f.life/35})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = `rgba(241, 196, 15, ${f.life/35})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, Math.PI*2); ctx.fill();
             } else if (f.type === 'flash') {
                 ctx.fillStyle = `rgba(255, 200, 0, ${f.life/5})`; ctx.beginPath(); ctx.arc(f.x, f.y, 15, 0, Math.PI*2); ctx.fill();
             } else if (f.type === 'dust') {
                 ctx.fillStyle = `rgba(139, 69, 19, ${f.life/30})`; ctx.beginPath(); ctx.arc(f.x, f.y, 8, 0, Math.PI*2); ctx.fill();
             } else if (f.type === 'smoke') {
-                ctx.fillStyle = `rgba(189, 195, 199, ${f.life/20})`; ctx.beginPath(); ctx.arc(f.x, f.y-10, 10, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = `rgba(189, 195, 199, ${f.life/20})`; ctx.beginPath(); ctx.arc(f.x, f.y-10, 12, 0, Math.PI*2); ctx.fill();
             } else if (f.type === 'debris') {
                 drawVoxel(f.x, f.y, 4, 4, 4, "#7f8c8d");
             }
