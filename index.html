@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Pro 3D Stylized</title>
+    <title>North & South: Pro Cartoon Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    
     <style>
         body {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            margin: 0; padding: 0; background-color: #111;
-            overflow: hidden; touch-action: none; font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0; padding: 0; background-color: #2c3e50;
+            overflow: hidden; touch-action: none; 
+            font-family: 'Fredoka One', cursive, sans-serif; /* Font Baru */
             user-select: none; -webkit-user-select: none;
         }
         
@@ -20,71 +23,101 @@
         canvas {
             width: 100%; height: 100%; object-fit: contain;
             background-color: #7bc05b;
-            image-rendering: optimizeQuality;
         }
         
-        /* UI Panel Atas */
+        /* UI Panel Atas Bergaya Kayu/Metal Kartun */
         .hud {
             position: absolute; top: 15px; width: 95%; max-width: 900px;
             display: flex; justify-content: space-between; z-index: 10; pointer-events: none;
         }
         .badge {
-            background: rgba(0,0,0,0.85); padding: 8px 25px; border-radius: 20px;
-            border: 2px solid rgba(255,255,255,0.3); font-weight: bold; color: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            display: flex; align-items: center; gap: 8px; font-size: 14px;
+            background: linear-gradient(to bottom, #ecf0f1, #bdc3c7);
+            padding: 8px 25px; border-radius: 25px;
+            border: 4px solid #2c3e50; color: #2c3e50;
+            box-shadow: 0 6px 0 #2c3e50, 0 10px 15px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 10px; font-size: 16px;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.5); }
+        .dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #2c3e50; }
 
-        /* Mobile Controls */
+        /* KONTROL BAWAH */
         #controls {
-            position: absolute; bottom: 20px; width: 95%; max-width: 950px;
+            position: absolute; bottom: 30px; width: 95%; max-width: 950px;
             display: flex; justify-content: space-between; align-items: flex-end; z-index: 20;
         }
         
-        .dpad { display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 8px; }
+        /* D-Pad Bulat Tebal */
+        .dpad { display: grid; grid-template-columns: 65px 65px 65px; grid-template-rows: 65px 65px 65px; gap: 8px; }
         .dpad-btn {
-            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 15px; display: flex; justify-content: center; align-items: center;
-            font-size: 24px; color: white; cursor: pointer; backdrop-filter: blur(5px);
+            background: linear-gradient(to bottom, #ffffff, #dcdde1);
+            border: 4px solid #2c3e50; border-radius: 20px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 28px; color: #2c3e50; cursor: pointer;
+            box-shadow: 0 6px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s;
         }
-        .dpad-btn:active, .dpad-btn.active { background: rgba(255,255,255,0.9); transform: scale(0.95); color: #111; }
+        .dpad-btn:active, .dpad-btn.active {
+            transform: translateY(6px); box-shadow: 0 0 0 #2c3e50, 0 4px 5px rgba(0,0,0,0.3); background: #f1c40f;
+        }
         .empty { visibility: hidden; }
 
-        .actions { display: flex; align-items: flex-end; gap: 15px; }
-        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 150px; }
+        /* Panel Pasukan Kanan */
+        .actions { display: flex; align-items: flex-end; gap: 20px; }
+        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 180px; }
         .act-btn {
-            background: linear-gradient(to bottom, #34495e, #2c3e50); border: 2px solid #7f8c8d; border-radius: 12px; color: white;
-            font-weight: bold; font-size: 13px; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.6); height: 40px; cursor: pointer; text-shadow: 1px 1px 2px black;
+            background: linear-gradient(to bottom, #3498db, #2980b9); 
+            border: 4px solid #1a252f; border-radius: 15px; color: white;
+            font-size: 14px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 6px 0 #1a252f, 0 8px 10px rgba(0,0,0,0.4); height: 45px; cursor: pointer;
+            text-shadow: 1px 1px 0 #000; transition: all 0.1s; letter-spacing: 1px;
         }
-        .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #111; border-color: #fff; box-shadow: 0 0 15px rgba(241,196,15,0.6); text-shadow: none; }
-        .act-btn:active { transform: scale(0.95); }
+        .act-btn.selected { 
+            background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; 
+            border-color: #2c3e50; box-shadow: 0 6px 0 #d35400, 0 8px 10px rgba(0,0,0,0.4);
+            text-shadow: 1px 1px 0 #d35400;
+        }
+        .act-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #1a252f; }
         .btn-full { grid-column: span 2; }
         
+        /* Tombol Tembak Premium */
         .fire-btn { 
-            background: linear-gradient(to bottom, #ff7675, #e74c3c); border: 4px solid #fff; border-radius: 50%; 
-            width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;
-            color: white; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.7);
-            text-shadow: 1px 1px 3px black;
+            background: linear-gradient(to bottom, #ff7675, #e74c3c); 
+            border: 5px solid #2c3e50; border-radius: 50%; 
+            width: 90px; height: 90px; display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 26px; cursor: pointer; 
+            box-shadow: 0 8px 0 #c0392b, 0 12px 15px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 0 #c0392b; transition: all 0.1s;
         }
-        .fire-btn:active, .fire-btn.active { background: #c0392b; border-color: #f1c40f; transform: scale(0.95); }
+        .fire-btn:active, .fire-btn.active { 
+            background: #c0392b; transform: translateY(8px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f;
+        }
 
+        /* MODAL GAME OVER */
         #game-over-modal {
             display: none; position: absolute; z-index: 100;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9); border: 3px solid #f1c40f; border-radius: 15px;
-            padding: 30px; text-align: center; color: white; width: 250px; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+            background: linear-gradient(to bottom, #34495e, #2c3e50);
+            border: 6px solid #f1c40f; border-radius: 25px;
+            padding: 40px; text-align: center; color: white; width: 280px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 5px 0 rgba(255,255,255,0.2);
         }
+        #game-over-msg { font-size: 32px; text-shadow: 2px 2px 0 #000; letter-spacing: 2px; }
         #btn-restart {
-            margin-top: 20px; padding: 12px 20px; background: #f1c40f; color: #111;
-            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%;
+            margin-top: 25px; padding: 15px 20px; 
+            background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff;
+            border: 4px solid #2c3e50; border-radius: 15px; font-size: 20px; cursor: pointer; width: 100%;
+            box-shadow: 0 6px 0 #d35400; text-shadow: 1px 1px 0 #d35400;
+            font-family: 'Fredoka One', cursive; transition: all 0.1s;
         }
-        #btn-restart:active { transform: scale(0.95); }
+        #btn-restart:active { transform: translateY(6px); box-shadow: 0 0 0 #d35400; }
 
         @media (max-width: 750px) {
-            .dpad { grid-template-columns: 50px 50px 50px; grid-template-rows: 50px 50px 50px; }
-            .fire-btn { width: 65px; height: 65px; font-size: 16px; }
+            .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
+            .dpad-btn { font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #2c3e50; }
+            .squad-grid { width: 130px; }
+            .act-btn { height: 35px; font-size: 11px; box-shadow: 0 4px 0 #1a252f; border-width: 3px; }
+            .fire-btn { width: 75px; height: 75px; font-size: 18px; border-width: 4px; box-shadow: 0 6px 0 #c0392b; }
+            .badge { padding: 5px 15px; font-size: 11px; }
         }
     </style>
 </head>
@@ -95,14 +128,14 @@
         
         <div class="hud">
             <div class="badge"><div class="dot" style="background:#3498db;"></div> UNION</div>
-            <div class="badge" id="squad-hud" style="color: #f1c40f; border-color: #f1c40f;">Select: INFANTRY</div>
+            <div class="badge" id="squad-hud" style="color: #d35400; background: #f1c40f;">SELECT: INFANTRY</div>
             <div class="badge">CONFEDERATE <div class="dot" style="background:#e74c3c;"></div></div>
         </div>
 
         <div id="controls">
             <div class="dpad">
-                <div class="empty"></div><div class="dpad-btn" id="btn-up">▲</div><div class="empty"></div>
-                <div class="dpad-btn" id="btn-left">◀</div><div class="dpad-btn" id="btn-down">▼</div><div class="dpad-btn" id="btn-right">▶</div>
+                <div class="empty"></div><div class="dpad-btn" id="btn-up">W</div><div class="empty"></div>
+                <div class="dpad-btn" id="btn-left">A</div><div class="dpad-btn" id="btn-down">S</div><div class="dpad-btn" id="btn-right">D</div>
             </div>
             
             <div class="actions">
@@ -117,17 +150,40 @@
         
         <div id="game-over-modal">
             <h2 id="game-over-msg" style="margin-top: 0;">Victory!</h2>
-            <button id="btn-restart" onclick="resetGame()">Play Again</button>
+            <button id="btn-restart" onclick="resetGame()">PLAY AGAIN</button>
         </div>
     </div>
 
 <script>
+    // --- SFX AUDIO ENGINE (No external files needed) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const actx = new AudioContext();
+
+    function playSound(type) {
+        if (actx.state === 'suspended') actx.resume();
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.connect(gain); gain.connect(actx.destination);
+
+        let now = actx.currentTime;
+        if (type === 'click') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+            gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'shoot') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(150, now); // Retro noise approximation
+            gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now); osc.stop(now + 0.2);
+        } else if (type === 'cannon') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(20, now + 0.5);
+            gain.gain.setValueAtTime(0.6, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
+        }
+    }
+
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d", { alpha: false });
-
-    // Load Peta Image (image.png)
-    const bgImage = new Image();
-    bgImage.src = 'image.png'; 
+    const bgImage = new Image(); bgImage.src = 'image.png'; 
 
     function resize() {
         let scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
@@ -140,7 +196,10 @@
     function bindBtn(id, key) {
         const el = document.getElementById(id);
         if(!el) return;
-        const press = (e) => { e.preventDefault(); keys[key] = true; el.classList.add('active'); };
+        const press = (e) => { 
+            e.preventDefault(); keys[key] = true; el.classList.add('active'); 
+            if(key !== 'w' && key !== 'a' && key !== 's' && key !== 'd' && key !== 'space') playSound('click');
+        };
         const release = (e) => { e.preventDefault(); keys[key] = false; el.classList.remove('active'); };
         el.addEventListener('touchstart', press, {passive: false}); el.addEventListener('touchend', release, {passive: false});
         el.addEventListener('mousedown', press); el.addEventListener('mouseup', release); el.addEventListener('mouseleave', release);
@@ -164,8 +223,9 @@
 
     let activeSquad = 'infantry';
     window.switchSquad = function(type) {
+        playSound('click');
         activeSquad = type;
-        document.getElementById('squad-hud').innerText = 'Select: ' + type.toUpperCase();
+        document.getElementById('squad-hud').innerText = 'SELECT: ' + type.toUpperCase();
         document.querySelectorAll('.squad-grid .act-btn').forEach(b => b.classList.remove('selected'));
         document.getElementById('btn-' + type.substring(0,3)).classList.add('selected');
     };
@@ -184,15 +244,18 @@
     let gameOver = false, frames = 0;
     let union, confed, projectiles, fx;
 
+    // DIPERLAMBAT: Semua kecepatan dikurangi sekitar 40-50%
     function init(team, startX, dir) {
-        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*40*-dir, y: 150 + Math.floor(i/2)*80, speed: 2.5, cd: 0, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
-        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 110*-dir, y: 180 + i*90, speed: 4.5, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
+        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*40*-dir, y: 150 + Math.floor(i/2)*80, speed: 1.5, cd: 0, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
+        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 110*-dir, y: 180 + i*90, speed: 2.8, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
     }
 
     window.resetGame = function() {
+        playSound('click');
         document.getElementById('game-over-modal').style.display = 'none';
-        union = { color: '#2980b9', pants: '#1c5982', cannon: { x: 100, y: 350, alive: true, cd: 0, speed: 3, frame:0 }, infantry: [], cavalry: [] };
-        confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: 2.5, frame:0 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
+        // DIPERLAMBAT: Kecepatan Cannon Union & Confed
+        union = { color: '#2980b9', pants: '#1c5982', cannon: { x: 100, y: 350, alive: true, cd: 0, speed: 1.8, frame:0 }, infantry: [], cavalry: [] };
+        confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: 1.5, frame:0 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
         projectiles = []; fx = [];
         init(union, 250, 1); init(confed, 1030, -1);
         gameOver = false; keys.space = false;
@@ -202,8 +265,7 @@
     function moveGroup(group, dx, dy, isAI = false) {
         group.forEach(u => {
             if(u.alive) {
-                let nx = u.x + dx * u.speed;
-                let ny = u.y + dy * u.speed;
+                let nx = u.x + dx * u.speed; let ny = u.y + dy * u.speed;
                 let moved = false;
                 
                 if (canMoveTo(nx, u.y)) { u.x = nx; moved = true; }
@@ -214,15 +276,23 @@
                     if (u.y < bc - 10) u.y += u.speed;
                     else if (u.y > bc + 10) u.y -= u.speed;
                 }
-                if(moved && (dx!==0 || dy!==0)) u.frame += 0.8;
+                
+                // VFX Debu Langkah
+                if(moved && (dx!==0 || dy!==0)) {
+                    u.frame += 0.5;
+                    if(frames % 10 === 0 && Math.random() < 0.5) fx.push({ x: u.x, y: u.y+5, type: 'dust', life: 15 });
+                }
             }
         });
     }
 
     function fireCannon(cannon, isUnion) {
         if(cannon.cd <= 0 && cannon.alive) {
-            projectiles.push({ x: isUnion ? cannon.x+40 : cannon.x-40, y: cannon.y-25, vx: isUnion ? 15 : -15, type: 'ball', isUnion: isUnion, life: 90 });
-            cannon.cd = 60;
+            playSound('cannon');
+            // Kecepatan peluru meriam dikurangi
+            projectiles.push({ x: isUnion ? cannon.x+40 : cannon.x-40, y: cannon.y-25, vx: isUnion ? 9 : -9, type: 'ball', isUnion: isUnion, life: 120 });
+            fx.push({ x: isUnion ? cannon.x+45 : cannon.x-45, y: cannon.y-25, type: 'flash', life: 5 }); // Muzzle flash
+            cannon.cd = 90; // Reload lebih lama
         }
     }
 
@@ -242,9 +312,18 @@
             if(keys.space) fireCannon(union.cannon, true);
         } else if(activeSquad === 'infantry') {
             moveGroup(union.infantry, dx, dy);
-            if(keys.space) union.infantry.forEach(u => {
-                if(u.alive && u.cd <= 0) { projectiles.push({ x: u.x+20, y: u.y-25, vx: 14, type: 'bullet', isUnion: true, life: 60 }); u.cd = 25; }
-            });
+            if(keys.space) {
+                let shotFired = false;
+                union.infantry.forEach(u => {
+                    if(u.alive && u.cd <= 0) { 
+                        // Kecepatan peluru senapan dikurangi
+                        projectiles.push({ x: u.x+20, y: u.y-25, vx: 10, type: 'bullet', isUnion: true, life: 70 }); 
+                        fx.push({ x: u.x+25, y: u.y-25, type: 'flash', life: 4 });
+                        u.cd = 40; shotFired = true;
+                    }
+                });
+                if(shotFired) playSound('shoot');
+            }
         } else if(activeSquad === 'cavalry') {
             moveGroup(union.cavalry, dx, dy);
         }
@@ -259,7 +338,7 @@
             if(confed.infantry.some(u=>u.alive)) ch.push('infantry');
             if(confed.cavalry.some(u=>u.alive)) ch.push('cavalry');
             if(confed.cannon.alive) ch.push('cannon');
-            if(ch.length > 0) { confed.aiState = ch[Math.floor(Math.random()*ch.length)]; confed.aiTimer = 50 + Math.random()*50; }
+            if(ch.length > 0) { confed.aiState = ch[Math.floor(Math.random()*ch.length)]; confed.aiTimer = 60 + Math.random()*60; }
         }
 
         if(confed.aiState === 'cannon' && confed.cannon.alive) {
@@ -267,12 +346,20 @@
             confed.cannon.y += aiDy * confed.cannon.speed;
             confed.cannon.frame += 0.5;
             if(confed.cannon.y < 80) confed.cannon.y = 80; if(confed.cannon.y > 680) confed.cannon.y = 680;
-            if(Math.random() < 0.03) fireCannon(confed.cannon, false);
+            if(Math.random() < 0.02) fireCannon(confed.cannon, false);
         } else if(confed.aiState === 'infantry') {
             moveGroup(confed.infantry, -0.8, (Math.random()-0.5), true);
-            if(Math.random() < 0.08) confed.infantry.forEach(u => {
-                if(u.alive && u.cd <= 0 && Math.random() < 0.3) { projectiles.push({ x: u.x-20, y: u.y-25, vx: -14, type: 'bullet', isUnion: false, life: 60 }); u.cd = 40; }
-            });
+            if(Math.random() < 0.05) {
+                let shotFired = false;
+                confed.infantry.forEach(u => {
+                    if(u.alive && u.cd <= 0 && Math.random() < 0.3) { 
+                        projectiles.push({ x: u.x-20, y: u.y-25, vx: -10, type: 'bullet', isUnion: false, life: 70 }); 
+                        fx.push({ x: u.x-25, y: u.y-25, type: 'flash', life: 4 });
+                        u.cd = 50; shotFired = true;
+                    }
+                });
+                if(shotFired) playSound('shoot');
+            }
         } else if(confed.aiState === 'cavalry') {
             moveGroup(confed.cavalry, -1.2, (Math.random()-0.5)*2, true);
         }
@@ -282,8 +369,16 @@
         // Physics
         for(let i=projectiles.length-1; i>=0; i--) {
             let p = projectiles[i]; p.x += p.vx; p.life--;
+            
+            // Trail untuk cannonball
+            if(p.type === 'ball' && frames%3===0) fx.push({x: p.x, y: p.y, type:'smoke', life: 10});
+
             if(p.type === 'ball' && p.life <= 0) {
-                fx.push({ x: p.x, y: p.y, r: 0, life: 25 });
+                playSound('cannon'); // Reuse sound for boom
+                fx.push({ x: p.x, y: p.y, type: 'boom', r: 0, life: 30 });
+                // Serpihan ledakan
+                for(let k=0; k<5; k++) fx.push({ x: p.x, y: p.y, type: 'debris', vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 20 });
+                
                 let eTeam = p.isUnion ? confed : union;
                 eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 65) u.alive = false; });
                 eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 65) u.alive = false; });
@@ -294,16 +389,25 @@
                 let hit = false; let eTeam = p.isUnion ? confed : union;
                 eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18) { u.alive = false; hit = true; }});
                 eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { u.alive = false; hit = true; }});
-                if(hit || p.life <= 0) projectiles.splice(i, 1);
+                if(hit) {
+                    fx.push({x: p.x, y: p.y, type: 'smoke', life: 10});
+                    projectiles.splice(i, 1);
+                } else if(p.life <= 0) projectiles.splice(i, 1);
             }
         }
-        for(let i=fx.length-1; i>=0; i--) { fx[i].r += (60 - fx[i].r)*0.2; fx[i].life--; if(fx[i].life <= 0) fx.splice(i,1); }
+        for(let i=fx.length-1; i>=0; i--) { 
+            let f = fx[i];
+            if(f.type === 'boom') f.r += (60 - f.r)*0.15;
+            else if(f.type === 'debris') { f.x += f.vx; f.y += f.vy; }
+            f.life--; 
+            if(f.life <= 0) fx.splice(i,1); 
+        }
 
         // Melee Clash
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
-            confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 35) ci.alive = false; });
-            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 35) { cc.alive = false; uc.alive = false; }});
+            confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 35) { ci.alive = false; fx.push({x: ci.x, y: ci.y, type:'smoke', life: 15}); }});
+            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 35) { cc.alive = false; uc.alive = false; fx.push({x: cc.x, y: cc.y, type:'smoke', life: 20}); }});
             if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 45) confed.cannon.alive = false;
         });
 
@@ -312,15 +416,16 @@
         let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
         if(!uAlive || !cAlive) {
             gameOver = true;
+            playSound('cannon'); // Victory/Defeat sound
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
-            msg.innerHTML = !uAlive ? "DEFEAT!<br><span style='font-size:14px'>Pasukan Union Hancur</span>" : "VICTORY!<br><span style='font-size:14px'>Pasukan Confederate Hancur</span>";
-            msg.style.color = !uAlive ? "#e74c3c" : "#2ecc71";
+            msg.innerHTML = !uAlive ? "DEFEAT!<br><span style='font-size:16px; font-family:sans-serif;'>Union Destroyed</span>" : "VICTORY!<br><span style='font-size:16px; font-family:sans-serif;'>Confederate Defeated</span>";
+            msg.style.color = !uAlive ? "#e74c3c" : "#f1c40f";
             modal.style.display = "block";
         }
     }
 
-    // --- PRO 3D VOXEL ENGINE DENGAN TEKSTUR GRADASI ---
+    // --- 3D ENGINE ---
     function shadeCol(col, amt) {
         let num = parseInt(col.slice(1), 16);
         let r = (num >> 16) + amt; if(r>255) r=255; else if(r<0) r=0;
@@ -329,69 +434,39 @@
         return "#" + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
     }
 
-    // Render Voxel dengan tekstur material (Gradasi) dan Edge Highlighting
     function drawVoxel(x, y, w, h, d, color, isMetal = false) {
-        let topC = shadeCol(color, 40);
-        let rightC = shadeCol(color, -30);
-        let frontC = color;
-
-        // Simulasi Tekstur Material Gradasi
+        let topC = shadeCol(color, 40); let rightC = shadeCol(color, -30);
         let gradF = ctx.createLinearGradient(0, y-h, 0, y);
-        gradF.addColorStop(0, shadeCol(color, isMetal ? 50 : 15));
-        gradF.addColorStop(1, shadeCol(color, isMetal ? -40 : -15));
-        
+        gradF.addColorStop(0, shadeCol(color, isMetal ? 50 : 15)); gradF.addColorStop(1, shadeCol(color, isMetal ? -40 : -15));
         let gradR = ctx.createLinearGradient(0, y-h, 0, y);
-        gradR.addColorStop(0, shadeCol(rightC, 15));
-        gradR.addColorStop(1, shadeCol(rightC, -20));
+        gradR.addColorStop(0, shadeCol(rightC, 15)); gradR.addColorStop(1, shadeCol(rightC, -20));
 
-        // Front Face
-        ctx.fillStyle = gradF; 
-        ctx.fillRect(x - w/2, y - h, w, h);
-        
-        // Top Face
+        ctx.fillStyle = gradF; ctx.fillRect(x - w/2, y - h, w, h);
         ctx.fillStyle = topC; ctx.beginPath();
-        ctx.moveTo(x - w/2, y - h); ctx.lineTo(x - w/2 + d, y - h - d);
-        ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2, y - h); ctx.fill();
-        
-        // Right Face
+        ctx.moveTo(x - w/2, y - h); ctx.lineTo(x - w/2 + d, y - h - d); ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2, y - h); ctx.fill();
         ctx.fillStyle = gradR; ctx.beginPath();
-        ctx.moveTo(x + w/2, y - h); ctx.lineTo(x + w/2 + d, y - h - d);
-        ctx.lineTo(x + w/2 + d, y - d); ctx.lineTo(x + w/2, y); ctx.fill();
-
-        // Edge Highlight (Menambah kedalaman 3D)
-        ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 1;
-        ctx.strokeRect(x - w/2, y - h, w, h);
+        ctx.moveTo(x + w/2, y - h); ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2 + d, y - d); ctx.lineTo(x + w/2, y); ctx.fill();
+        
+        ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1; ctx.strokeRect(x - w/2, y - h, w, h);
     }
 
-    // Render Roda dengan Jari-jari
     function drawWheel(x, y, radius, rot) {
-        ctx.save();
-        ctx.translate(x, y); ctx.rotate(rot);
-        ctx.fillStyle = "#3e2723";
-        ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#111";
-        ctx.beginPath(); ctx.arc(0, 0, radius-4, 0, Math.PI*2); ctx.fill();
-        // Spokes
-        ctx.strokeStyle = "#8d6e63"; ctx.lineWidth = 3;
-        for(let i=0; i<4; i++) {
-            ctx.rotate(Math.PI/4);
-            ctx.beginPath(); ctx.moveTo(-radius, 0); ctx.lineTo(radius, 0); ctx.stroke();
-        }
-        ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+        ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+        ctx.fillStyle = "#3e2723"; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(0, 0, radius-4, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "#8d6e63"; ctx.lineWidth = 4;
+        for(let i=0; i<4; i++) { ctx.rotate(Math.PI/4); ctx.beginPath(); ctx.moveTo(-radius, 0); ctx.lineTo(radius, 0); ctx.stroke(); }
+        ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
         ctx.restore();
     }
 
     function render() {
-        // GAMBAR PETA UTAMA
-        if(bgImage.complete) {
-            ctx.drawImage(bgImage, 0, 0, 1280, 720);
-        } else {
-            ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720);
-        }
+        if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720);
+        else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
         
-        // Highlight Lingkaran 
+        // Highlight Base Circle
         ctx.fillStyle = "rgba(241, 196, 15, 0.4)";
-        if(activeSquad === 'cannon' && union.cannon.alive) ctx.fillRect(union.cannon.x-40, union.cannon.y-30, 80, 60);
+        if(activeSquad === 'cannon' && union.cannon.alive) { ctx.beginPath(); ctx.ellipse(union.cannon.x, union.cannon.y, 45, 15, 0, 0, Math.PI*2); ctx.fill(); }
         else if(activeSquad === 'infantry') union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 20, 10, 0, 0, Math.PI*2); ctx.fill(); }});
         else if(activeSquad === 'cavalry') union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 35, 15, 0, 0, Math.PI*2); ctx.fill(); }});
 
@@ -406,76 +481,60 @@
         renders.sort((a,b) => a.y - b.y);
 
         function drawDetailedUnit(u, team, type, dir) {
-            let col = team.color;
-            let pCol = team.pants;
-            let walk = Math.sin(u.frame) * 8; // Animasi Kaki
-            let bob = Math.abs(Math.sin(u.frame)) * 4;
+            let col = team.color; let pCol = team.pants;
+            let walk = Math.sin(u.frame) * 8; let bob = Math.abs(Math.sin(u.frame)) * 4;
 
-            // Shadow Drop
-            ctx.fillStyle = "rgba(0,0,0,0.35)";
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.beginPath(); ctx.ellipse(u.x, u.y, type==='cavalry'?25:(type==='cannon'?30:12), type==='cannon'?12:6, 0, 0, Math.PI*2); ctx.fill();
             
             if(type === 'cannon') {
-                // Sasis Meriam
                 drawVoxel(u.x, u.y - 5, 45, 15, 15, "#795548"); 
-                // Laras Metalik
                 drawVoxel(u.x + (15*dir), u.y - 20, 50, 14, 14, "#2c3e50", true); 
-                // Ujung Meriam (Muzzle)
                 drawVoxel(u.x + (45*dir), u.y - 19, 8, 16, 16, "#1a252f", true);
-                // Roda
-                drawWheel(u.x - 15, u.y - 5, 18, u.frame * 0.5 * dir);
-                drawWheel(u.x + 15, u.y - 5, 18, u.frame * 0.5 * dir);
+                drawWheel(u.x - 15, u.y - 5, 18, u.frame * 0.5 * dir); drawWheel(u.x + 15, u.y - 5, 18, u.frame * 0.5 * dir);
             } 
             else if (type === 'infantry') {
-                // Kaki Kiri & Kanan
                 drawVoxel(u.x - (4*dir) + (walk*dir), u.y, 6, 12, 6, pCol);
                 drawVoxel(u.x + (4*dir) - (walk*dir), u.y, 6, 12, 6, pCol);
-                // Badan & Sabuk
                 drawVoxel(u.x, u.y - 12 - bob, 16, 15, 10, col);
-                drawVoxel(u.x, u.y - 15 - bob, 17, 3, 11, "#222"); // Sabuk hitam
-                drawVoxel(u.x + (8*dir), u.y - 15 - bob, 2, 4, 4, "#f1c40f"); // Gesper Emas
-                // Wajah & Topi
+                drawVoxel(u.x, u.y - 15 - bob, 17, 3, 11, "#222"); drawVoxel(u.x + (8*dir), u.y - 15 - bob, 2, 4, 4, "#f1c40f"); 
                 drawVoxel(u.x, u.y - 27 - bob, 10, 10, 10, "#f1c27d");
-                drawVoxel(u.x, u.y - 37 - bob, 12, 6, 12, col); // Topi Kepi
-                drawVoxel(u.x + (6*dir), u.y - 37 - bob, 8, 1, 10, "#111"); // Lidah Topi
-                // Senapan (Kayu + Besi)
-                drawVoxel(u.x + (10*dir), u.y - 12 - bob, 25, 3, 3, "#5d4037"); // Gagang Kayu
-                drawVoxel(u.x + (25*dir), u.y - 13 - bob, 15, 2, 2, "#95a5a6", true); // Laras Metal
+                drawVoxel(u.x, u.y - 37 - bob, 12, 6, 12, col); drawVoxel(u.x + (6*dir), u.y - 37 - bob, 8, 1, 10, "#111"); 
+                drawVoxel(u.x + (10*dir), u.y - 12 - bob, 25, 3, 3, "#5d4037"); drawVoxel(u.x + (25*dir), u.y - 13 - bob, 15, 2, 2, "#95a5a6", true); 
             } 
             else if (type === 'cavalry') {
-                let hCol = dir===1 ? "#5d4037" : "#4e342e"; // Warna kuda
-                // Kaki Kuda (4 Kaki Berlari)
-                drawVoxel(u.x - 12 + walk, u.y, 5, 12, 5, "#3e2723");
-                drawVoxel(u.x - 6 - walk, u.y, 5, 12, 5, "#3e2723");
-                drawVoxel(u.x + 12 - walk, u.y, 5, 12, 5, "#3e2723");
-                drawVoxel(u.x + 18 + walk, u.y, 5, 12, 5, "#3e2723");
-                
-                // Bodi Kuda
+                let hCol = dir===1 ? "#5d4037" : "#4e342e";
+                drawVoxel(u.x - 12 + walk, u.y, 5, 12, 5, "#3e2723"); drawVoxel(u.x - 6 - walk, u.y, 5, 12, 5, "#3e2723");
+                drawVoxel(u.x + 12 - walk, u.y, 5, 12, 5, "#3e2723"); drawVoxel(u.x + 18 + walk, u.y, 5, 12, 5, "#3e2723");
                 drawVoxel(u.x, u.y - 12 - bob, 45, 18, 16, hCol); 
-                drawVoxel(u.x - (25*dir), u.y - 16 - bob, 6, 12, 4, "#222"); // Ekor
-                drawVoxel(u.x + (20*dir), u.y - 28 - bob, 12, 16, 10, hCol); // Kepala Kuda
-                drawVoxel(u.x + (15*dir), u.y - 32 - bob, 6, 14, 4, "#222"); // Surai (Rambut)
-
-                // Penunggang
-                drawVoxel(u.x - (5*dir), u.y - 28 - bob, 14, 14, 10, col); // Baju Rider
-                drawVoxel(u.x - (5*dir), u.y - 42 - bob, 10, 10, 10, "#f1c27d"); // Kepala Rider
-                drawVoxel(u.x - (5*dir), u.y - 52 - bob, 12, 6, 12, col); // Topi Rider
-                drawVoxel(u.x + (15*dir), u.y - 35 - bob, 22, 2, 3, "#ecf0f1", true); // Pedang Mengkilap
+                drawVoxel(u.x - (25*dir), u.y - 16 - bob, 6, 12, 4, "#222"); 
+                drawVoxel(u.x + (20*dir), u.y - 28 - bob, 12, 16, 10, hCol); drawVoxel(u.x + (15*dir), u.y - 32 - bob, 6, 14, 4, "#222"); 
+                drawVoxel(u.x - (5*dir), u.y - 28 - bob, 14, 14, 10, col); 
+                drawVoxel(u.x - (5*dir), u.y - 42 - bob, 10, 10, 10, "#f1c27d"); 
+                drawVoxel(u.x - (5*dir), u.y - 52 - bob, 12, 6, 12, col); 
+                drawVoxel(u.x + (15*dir), u.y - 35 - bob, 22, 2, 3, "#ecf0f1", true); 
             }
         }
-        
         renders.forEach(r => r.draw());
 
-        // Proyektil & Efek
+        // VFX Rendering
         projectiles.forEach(p => {
             ctx.fillStyle = p.type==='ball' ? "#111" : "#f1c40f";
             ctx.beginPath(); ctx.arc(p.x, p.y - 12, p.type==='ball'?8:3, 0, Math.PI*2); ctx.fill();
         });
         fx.forEach(f => {
-            ctx.fillStyle = `rgba(231, 76, 60, ${f.life/25})`;
-            ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = `rgba(241, 196, 15, ${f.life/25})`;
-            ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, Math.PI*2); ctx.fill();
+            if(f.type === 'boom') {
+                ctx.fillStyle = `rgba(231, 76, 60, ${f.life/30})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = `rgba(241, 196, 15, ${f.life/30})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, Math.PI*2); ctx.fill();
+            } else if (f.type === 'flash') {
+                ctx.fillStyle = `rgba(255, 200, 0, ${f.life/5})`; ctx.beginPath(); ctx.arc(f.x, f.y, 15, 0, Math.PI*2); ctx.fill();
+            } else if (f.type === 'dust') {
+                ctx.fillStyle = `rgba(139, 69, 19, ${f.life/30})`; ctx.beginPath(); ctx.arc(f.x, f.y, 8, 0, Math.PI*2); ctx.fill();
+            } else if (f.type === 'smoke') {
+                ctx.fillStyle = `rgba(189, 195, 199, ${f.life/20})`; ctx.beginPath(); ctx.arc(f.x, f.y-10, 10, 0, Math.PI*2); ctx.fill();
+            } else if (f.type === 'debris') {
+                drawVoxel(f.x, f.y, 4, 4, 4, "#7f8c8d");
+            }
         });
     }
 
