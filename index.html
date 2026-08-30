@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: 3D Voxel Stylized</title>
+    <title>North & South: 3D Low-Poly on Custom Map</title>
     <style>
         body {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -19,7 +19,7 @@
         
         canvas {
             width: 100%; height: 100%; object-fit: contain;
-            background-color: #7bc05b; /* Warna rumput dasar */
+            background-color: #7bc05b; /* Fallback color */
         }
         
         /* UI Panel Atas */
@@ -41,7 +41,6 @@
             display: flex; justify-content: space-between; align-items: flex-end; z-index: 20;
         }
         
-        /* D-Pad */
         .dpad { display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 8px; }
         .dpad-btn {
             background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4);
@@ -51,7 +50,6 @@
         .dpad-btn:active, .dpad-btn.active { background: rgba(255,255,255,0.8); transform: scale(0.95); color: #111; }
         .empty { visibility: hidden; }
 
-        /* Action Panel */
         .actions { display: flex; align-items: flex-end; gap: 15px; }
         .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 150px; }
         .act-btn {
@@ -63,7 +61,6 @@
         .act-btn:active { transform: scale(0.95); }
         .btn-full { grid-column: span 2; }
         
-        /* Fire Button */
         .fire-btn { 
             background: #e74c3c; border: 4px solid #ff7675; border-radius: 50%; 
             width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;
@@ -93,365 +90,8 @@
 <body>
 
     <div id="game-wrapper">
-        <canvas id="gameCanvas" width="900" height="500"></canvas>
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
         
         <div class="hud">
             <div class="badge"><div class="dot" style="background:#3498db;"></div> UNION</div>
-            <div class="badge" id="squad-hud" style="color: #f1c40f; border-color: #f1c40f;">Select: INFANTRY</div>
-            <div class="badge">CONFEDERATE <div class="dot" style="background:#e74c3c;"></div></div>
-        </div>
-
-        <div id="controls">
-            <div class="dpad">
-                <div class="empty"></div><div class="dpad-btn" id="btn-up">▲</div><div class="empty"></div>
-                <div class="dpad-btn" id="btn-left">◀</div><div class="dpad-btn" id="btn-down">▼</div><div class="dpad-btn" id="btn-right">▶</div>
-            </div>
-            
-            <div class="actions">
-                <div class="squad-grid">
-                    <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">INF</div>
-                    <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
-                    <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON</div>
-                </div>
-                <div class="fire-btn" id="btn-fire">FIRE</div>
-            </div>
-        </div>
-        
-        <div id="game-over-modal">
-            <h2 id="game-over-msg" style="margin-top: 0;">Victory!</h2>
-            <button id="btn-restart" onclick="resetGame()">Play Again</button>
-        </div>
-    </div>
-
-<script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    function resize() {
-        let scale = Math.min(window.innerWidth / 900, window.innerHeight / 500);
-        canvas.style.transform = `scale(${scale})`;
-    }
-    window.addEventListener('resize', resize); resize();
-
-    // Input Control
-    const keys = { w:false, a:false, s:false, d:false, space:false };
-    function bindBtn(id, key) {
-        const el = document.getElementById(id);
-        if(!el) return;
-        const press = (e) => { e.preventDefault(); keys[key] = true; el.classList.add('active'); };
-        const release = (e) => { e.preventDefault(); keys[key] = false; el.classList.remove('active'); };
-        el.addEventListener('touchstart', press, {passive: false}); el.addEventListener('touchend', release, {passive: false});
-        el.addEventListener('mousedown', press); el.addEventListener('mouseup', release); el.addEventListener('mouseleave', release);
-    }
-    bindBtn('btn-up', 'w'); bindBtn('btn-down', 's'); bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd'); bindBtn('btn-fire', 'space');
-
-    window.addEventListener('keydown', (e) => {
-        if(e.key === 'w' || e.key === 'ArrowUp') keys.w = true;
-        if(e.key === 's' || e.key === 'ArrowDown') keys.s = true;
-        if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = true;
-        if(e.key === 'd' || e.key === 'ArrowRight') keys.d = true;
-        if(e.key === ' ' || e.code === 'Space') keys.space = true;
-    });
-    window.addEventListener('keyup', (e) => {
-        if(e.key === 'w' || e.key === 'ArrowUp') keys.w = false;
-        if(e.key === 's' || e.key === 'ArrowDown') keys.s = false;
-        if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = false;
-        if(e.key === 'd' || e.key === 'ArrowRight') keys.d = false;
-        if(e.key === ' ' || e.code === 'Space') keys.space = false;
-    });
-
-    let activeSquad = 'infantry';
-    window.switchSquad = function(type) {
-        activeSquad = type;
-        document.getElementById('squad-hud').innerText = 'Select: ' + type.toUpperCase();
-        document.querySelectorAll('.squad-grid .act-btn').forEach(b => b.classList.remove('selected'));
-        document.getElementById('btn-' + type.substring(0,3)).classList.add('selected');
-    };
-
-    // --- ENVIRONMENT & COLLIDER ---
-    // Resolusi Internal: 900x500
-    const MAP = {
-        riverX: 400, riverW: 100, // Sungai di tengah
-        bridgeY: 200, bridgeH: 100 // Jembatan Lurus
-    };
-
-    function canMoveTo(x, y) {
-        // Batas Layar
-        if (x < 20 || x > 880 || y < 50 || y > 450) return false;
-        
-        // Deteksi Air (Collider)
-        let inWaterX = x > MAP.riverX && x < (MAP.riverX + MAP.riverW);
-        let onBridgeY = y > MAP.bridgeY && y < (MAP.bridgeY + MAP.bridgeH);
-        
-        // Jika sedang di X sungai, tapi Y-nya bukan di atas jembatan -> Tabrak Air!
-        if (inWaterX && !onBridgeY) return false;
-
-        return true;
-    }
-
-    let gameOver = false, frames = 0;
-    let union, confed, projectiles, fx;
-
-    function init(team, startX, dir) {
-        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*30*-dir, y: 150 + Math.floor(i/2)*50, speed: 2, cd: 0, alive: true, team: dir===1?0:1, frame: 0 });
-        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 90*-dir, y: 170 + i*60, speed: 4, alive: true, team: dir===1?0:1, frame: 0 });
-    }
-
-    window.resetGame = function() {
-        document.getElementById('game-over-modal').style.display = 'none';
-        union = { color: '#2980b9', cannon: { x: 70, y: 250, alive: true, cd: 0, speed: 2.5 }, infantry: [], cavalry: [] };
-        confed = { color: '#c0392b', cannon: { x: 830, y: 250, alive: true, cd: 0, speed: 2 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
-        projectiles = []; fx = [];
-        init(union, 200, 1); init(confed, 700, -1);
-        gameOver = false; keys.space = false;
-    };
-    resetGame();
-
-    function moveGroup(group, dx, dy, isAI = false) {
-        group.forEach(u => {
-            if(u.alive) {
-                let nx = u.x + dx * u.speed;
-                let ny = u.y + dy * u.speed;
-                let moved = false;
-                
-                // Sliding Collision (Mulus jika nabrak air)
-                if (canMoveTo(nx, u.y)) { u.x = nx; moved = true; }
-                if (canMoveTo(u.x, ny)) { u.y = ny; moved = true; }
-
-                // AI Pathfinding: Jika AI mentok sungai, paksa jalan ke arah jembatan
-                if (isAI && !moved && dx < 0 && u.x > MAP.riverX + MAP.riverW) {
-                    if (u.y < MAP.bridgeY + 20) u.y += u.speed;
-                    else if (u.y > MAP.bridgeY + MAP.bridgeH - 20) u.y -= u.speed;
-                }
-
-                if(moved && (dx!==0 || dy!==0)) u.frame++;
-            }
-        });
-    }
-
-    function fireCannon(cannon, isUnion) {
-        if(cannon.cd <= 0 && cannon.alive) {
-            projectiles.push({ x: isUnion ? cannon.x+20 : cannon.x-20, y: cannon.y-5, vx: isUnion ? 10 : -10, type: 'ball', isUnion: isUnion, life: 80 });
-            cannon.cd = 60;
-        }
-    }
-
-    function update() {
-        if(gameOver) return;
-        frames++;
-
-        let dx = 0, dy = 0;
-        if(keys.w) dy = -1; if(keys.s) dy = 1;
-        if(keys.a) dx = -1; if(keys.d) dx = 1;
-
-        // Player Update
-        if(activeSquad === 'cannon' && union.cannon.alive) {
-            union.cannon.y += dy * union.cannon.speed;
-            if(union.cannon.y < 50) union.cannon.y = 50; if(union.cannon.y > 450) union.cannon.y = 450;
-            if(keys.space) fireCannon(union.cannon, true);
-        } else if(activeSquad === 'infantry') {
-            moveGroup(union.infantry, dx, dy);
-            if(keys.space) union.infantry.forEach(u => {
-                if(u.alive && u.cd <= 0) { projectiles.push({ x: u.x+10, y: u.y, vx: 10, type: 'bullet', isUnion: true, life: 50 }); u.cd = 30; }
-            });
-        } else if(activeSquad === 'cavalry') {
-            moveGroup(union.cavalry, dx, dy);
-        }
-
-        if(union.cannon.cd > 0) union.cannon.cd--;
-        union.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
-
-        // AI Update
-        confed.aiTimer--;
-        if(confed.aiTimer <= 0) {
-            let ch = [];
-            if(confed.infantry.some(u=>u.alive)) ch.push('infantry');
-            if(confed.cavalry.some(u=>u.alive)) ch.push('cavalry');
-            if(confed.cannon.alive) ch.push('cannon');
-            if(ch.length > 0) { confed.aiState = ch[Math.floor(Math.random()*ch.length)]; confed.aiTimer = 50 + Math.random()*50; }
-        }
-
-        if(confed.aiState === 'cannon' && confed.cannon.alive) {
-            confed.cannon.y += (Math.random() > 0.5 ? 1 : -1) * confed.cannon.speed;
-            if(confed.cannon.y < 50) confed.cannon.y = 50; if(confed.cannon.y > 450) confed.cannon.y = 450;
-            if(Math.random() < 0.03) fireCannon(confed.cannon, false);
-        } else if(confed.aiState === 'infantry') {
-            moveGroup(confed.infantry, -0.8, (Math.random()-0.5), true); // isAI = true
-            if(Math.random() < 0.08) confed.infantry.forEach(u => {
-                if(u.alive && u.cd <= 0 && Math.random() < 0.3) { projectiles.push({ x: u.x-10, y: u.y, vx: -10, type: 'bullet', isUnion: false, life: 50 }); u.cd = 40; }
-            });
-        } else if(confed.aiState === 'cavalry') {
-            moveGroup(confed.cavalry, -1.2, (Math.random()-0.5)*2, true);
-        }
-        if(confed.cannon.cd > 0) confed.cannon.cd--;
-        confed.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
-
-        // Physics
-        for(let i=projectiles.length-1; i>=0; i--) {
-            let p = projectiles[i]; p.x += p.vx; p.life--;
-            if(p.type === 'ball' && p.life <= 0) {
-                fx.push({ x: p.x, y: p.y, r: 0, life: 25 });
-                let eTeam = p.isUnion ? confed : union;
-                eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 45) u.alive = false; });
-                eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 45) u.alive = false; });
-                if(eTeam.cannon.alive && Math.hypot(eTeam.cannon.x-p.x, eTeam.cannon.y-p.y) < 55) eTeam.cannon.alive = false;
-                projectiles.splice(i, 1); continue;
-            }
-            if(p.type === 'bullet') {
-                let hit = false; let eTeam = p.isUnion ? confed : union;
-                eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<12 && Math.abs(u.y-p.y)<12) { u.alive = false; hit = true; }});
-                eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18) { u.alive = false; hit = true; }});
-                if(hit || p.life <= 0) projectiles.splice(i, 1);
-            }
-        }
-        for(let i=fx.length-1; i>=0; i--) { fx[i].r += (50 - fx[i].r)*0.2; fx[i].life--; if(fx[i].life <= 0) fx.splice(i,1); }
-
-        // Melee
-        union.cavalry.forEach(uc => {
-            if(!uc.alive) return;
-            confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 25) ci.alive = false; });
-            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 25) { cc.alive = false; uc.alive = false; }});
-            if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 30) confed.cannon.alive = false;
-        });
-
-        // Win Cond
-        let uAlive = union.cannon.alive || union.infantry.some(u=>u.alive) || union.cavalry.some(u=>u.alive);
-        let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
-        if(!uAlive || !cAlive) {
-            gameOver = true;
-            const modal = document.getElementById('game-over-modal');
-            const msg = document.getElementById('game-over-msg');
-            msg.innerHTML = !uAlive ? "DEFEAT!<br><span style='font-size:14px'>Pasukan Union Hancur</span>" : "VICTORY!<br><span style='font-size:14px'>Pasukan Confederate Hancur</span>";
-            msg.style.color = !uAlive ? "#e74c3c" : "#2ecc71";
-            modal.style.display = "block";
-        }
-    }
-
-    // --- 3D LOW POLY ENGINE (Murni HTML5) ---
-    // Fungsi pembuat tekstur shading otomatis
-    function shadeCol(col, amt) {
-        let num = parseInt(col.slice(1), 16);
-        let r = (num >> 16) + amt; if(r>255) r=255; else if(r<0) r=0;
-        let b = ((num >> 8) & 0x00FF) + amt; if(b>255) b=255; else if(b<0) b=0;
-        let g = (num & 0x0000FF) + amt; if(g>255) g=255; else if(g<0) g=0;
-        return "#" + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
-    }
-
-    // Gambar Block Voxel 3D (Depan, Atas, Samping Kanan)
-    function drawVoxel(x, y, w, h, d, color) {
-        let topC = shadeCol(color, 35);
-        let rightC = shadeCol(color, -25);
-        
-        ctx.fillStyle = color; ctx.fillRect(x - w/2, y - h, w, h); // Front
-        
-        ctx.fillStyle = topC; ctx.beginPath(); // Top
-        ctx.moveTo(x - w/2, y - h); ctx.lineTo(x - w/2 + d, y - h - d);
-        ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2, y - h); ctx.fill();
-        
-        ctx.fillStyle = rightC; ctx.beginPath(); // Right
-        ctx.moveTo(x + w/2, y - h); ctx.lineTo(x + w/2 + d, y - h - d);
-        ctx.lineTo(x + w/2 + d, y - d); ctx.lineTo(x + w/2, y); ctx.fill();
-    }
-
-    function render() {
-        ctx.clearRect(0,0,900,500);
-        
-        // --- GAMBAR PETA LINGKUNGAN NATIVE ---
-        // 1. Rumput Bergradasi Stylized
-        let bgGrad = ctx.createLinearGradient(0, 0, 0, 500);
-        bgGrad.addColorStop(0, "#7bc05b"); bgGrad.addColorStop(1, "#55a630");
-        ctx.fillStyle = bgGrad; ctx.fillRect(0,0,900,500);
-        
-        // 2. Sungai Lurus dengan tekstur riak air
-        ctx.fillStyle = "#3498db"; ctx.fillRect(MAP.riverX, 0, MAP.riverW, 500);
-        ctx.fillStyle = "#2980b9"; ctx.fillRect(MAP.riverX + 20, 0, 15, 500);
-        ctx.fillStyle = "#5dade2"; ctx.fillRect(MAP.riverX + 70, 0, 5, 500);
-
-        // 3. Jalan Tanah ke Jembatan
-        ctx.fillStyle = "#d3a863";
-        ctx.fillRect(0, MAP.bridgeY + 15, MAP.riverX, MAP.bridgeH - 30);
-        ctx.fillRect(MAP.riverX + MAP.riverW, MAP.bridgeY + 15, 900, MAP.bridgeH - 30);
-
-        // 4. Jembatan Kayu Voxel 3D Lurus
-        // Alas jembatan
-        drawVoxel(MAP.riverX + MAP.riverW/2, MAP.bridgeY + MAP.bridgeH, MAP.riverW, 10, 20, "#8d6e63"); 
-        // Pagar jembatan (Atas & Bawah)
-        drawVoxel(MAP.riverX + 15, MAP.bridgeY + 5, 5, 20, 5, "#5d4037");
-        drawVoxel(MAP.riverX + MAP.riverW - 15, MAP.bridgeY + 5, 5, 20, 5, "#5d4037");
-        ctx.fillStyle = "#5d4037"; ctx.fillRect(MAP.riverX, MAP.bridgeY - 15, MAP.riverW, 5); // Rail atas
-        
-        drawVoxel(MAP.riverX + 15, MAP.bridgeY + MAP.bridgeH, 5, 20, 5, "#5d4037");
-        drawVoxel(MAP.riverX + MAP.riverW - 15, MAP.bridgeY + MAP.bridgeH, 5, 20, 5, "#5d4037");
-        ctx.fillStyle = "#5d4037"; ctx.fillRect(MAP.riverX, MAP.bridgeY + MAP.bridgeH - 20, MAP.riverW, 5); // Rail bawah
-        
-        // Highlight Lingkaran Pasukan Dipilih
-        ctx.fillStyle = "rgba(241, 196, 15, 0.4)";
-        if(activeSquad === 'cannon' && union.cannon.alive) ctx.fillRect(union.cannon.x-30, union.cannon.y-20, 60, 40);
-        else if(activeSquad === 'infantry') union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 18, 10, 0, 0, Math.PI*2); ctx.fill(); }});
-        else if(activeSquad === 'cavalry') union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 25, 12, 0, 0, Math.PI*2); ctx.fill(); }});
-
-        // Depth Sorting (Z-Index untuk Voxel 3D)
-        let renders = [];
-        if(union.cannon.alive) renders.push({y: union.cannon.y, draw: ()=> drawVoxelUnit(union.cannon, 'union', 'cannon')});
-        if(confed.cannon.alive) renders.push({y: confed.cannon.y, draw: ()=> drawVoxelUnit(confed.cannon, 'confed', 'cannon')});
-        union.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'union', 'infantry')}); });
-        union.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'union', 'cavalry')}); });
-        confed.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'confed', 'infantry')}); });
-        confed.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'confed', 'cavalry')}); });
-
-        renders.sort((a,b) => a.y - b.y);
-
-        function drawVoxelUnit(u, team, type) {
-            let col = team === 'union' ? union.color : confed.color;
-            let pCol = team === 'union' ? "#1c5982" : "#7f8c8d"; // Celana
-            let bob = u.frame ? Math.abs(Math.sin(u.frame)) * 4 : 0; // Animasi loncat kecil
-            let dir = team === 'union' ? 1 : -1;
-
-            // Bayangan 
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.beginPath(); ctx.ellipse(u.x, u.y, type==='cavalry'?18:10, 5, 0, 0, Math.PI*2); ctx.fill();
-            
-            if(type === 'cannon') {
-                drawVoxel(u.x, u.y, 25, 15, 12, "#8d6e63"); // Bodi Kayu
-                drawVoxel(u.x - 15, u.y + 5, 8, 25, 8, "#3e2723"); // Roda Kiri
-                drawVoxel(u.x + 15, u.y + 5, 8, 25, 8, "#3e2723"); // Roda Kanan
-                drawVoxel(u.x + (10*dir), u.y - 10, 30, 10, 10, "#2c3e50"); // Laras Meriam Besi
-            } 
-            else if (type === 'infantry') {
-                drawVoxel(u.x, u.y - bob, 12, 10, 6, pCol); // Celana
-                drawVoxel(u.x, u.y - 10 - bob, 14, 12, 7, col); // Baju
-                drawVoxel(u.x, u.y - 15 - bob, 16, 2, 8, "#ecf0f1"); // Sabuk putih
-                drawVoxel(u.x, u.y - 22 - bob, 8, 8, 6, "#f1c27d"); // Kepala
-                drawVoxel(u.x + (2*dir), u.y - 30 - bob, 10, 6, 8, "#2c3e50"); // Topi (Kepi)
-                drawVoxel(u.x + (8*dir), u.y - 8 - bob, 22, 3, 3, "#333"); // Senapan
-            } 
-            else if (type === 'cavalry') {
-                let hCol = team === 'union' ? "#5d4037" : "#795548";
-                drawVoxel(u.x - (5*dir), u.y - bob, 28, 16, 12, hCol); // Badan Kuda
-                drawVoxel(u.x + (15*dir), u.y - 16 - bob, 8, 12, 8, hCol); // Kepala Kuda
-                drawVoxel(u.x - (5*dir), u.y - 16 - bob, 10, 12, 8, col); // Badan Penunggang
-                drawVoxel(u.x - (5*dir), u.y - 28 - bob, 8, 8, 6, "#f1c27d"); // Kepala Penunggang
-                drawVoxel(u.x + (10*dir), u.y - 20 - bob, 15, 2, 2, "#bdc3c7"); // Pedang
-            }
-        }
-        
-        renders.forEach(r => r.draw());
-
-        // Gambar Proyektil & Ledakan
-        projectiles.forEach(p => {
-            ctx.fillStyle = p.type==='ball' ? "#222" : "#f1c40f";
-            ctx.beginPath(); ctx.arc(p.x, p.y - 5, p.type==='ball'?6:2, 0, Math.PI*2); ctx.fill();
-        });
-        fx.forEach(f => {
-            ctx.fillStyle = `rgba(231, 76, 60, ${f.life/25})`;
-            ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = `rgba(241, 196, 15, ${f.life/25})`;
-            ctx.beginPath(); ctx.arc(f.x, f.y, f.r*0.6, 0, Math.PI*2); ctx.fill();
-        });
-    }
-
-    function loop() { update(); render(); requestAnimationFrame(loop); }
-    loop();
-</script>
-</body>
-</html>
+            <div class="badge" id="squad-hud" style="color: #f1c40f; border-color: #f1c40f;">Select
