@@ -8,13 +8,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     
-    <title>North & South: Ultimate Mobile Fix</title>
+    <title>North & South: Pro SVG Icons</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
+        /* SCALER FIX: Menggunakan Flexbox untuk selalu menempatkan game di tengah tanpa bug koordinat */
         body {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             margin: 0; padding: 0; background-color: #050505;
+            display: flex; align-items: center; justify-content: center;
             overflow: hidden; touch-action: none; 
             font-family: 'Fredoka One', cursive, sans-serif;
             user-select: none; -webkit-user-select: none;
@@ -22,8 +24,7 @@
 
         #rotate-msg { display: none; }
         @media (orientation: portrait) {
-            #game-ui { display: none !important; }
-            #start-screen { display: none !important; }
+            #screen-scaler { display: none !important; }
             #rotate-msg { 
                 display: flex; flex-direction: column; align-items: center; justify-content: center; 
                 position: fixed; top:0; left:0; right:0; bottom:0; background: #2c3e50; color: white; z-index: 9999;
@@ -35,17 +36,16 @@
             @keyframes tilt { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
         }
 
+        /* WADAH UTAMA 1280x720 (Akan di-scale oleh JS) */
         #screen-scaler {
-            position: absolute; transform-origin: top left;
-            width: 1280px; height: 720px; background-color: #7bc05b; overflow: hidden;
+            position: relative; width: 1280px; height: 720px; 
+            background-color: #7bc05b; transform-origin: center center;
+            flex-shrink: 0; /* Mencegah flexbox merusak ukuran */
         }
         canvas { position: absolute; top: 0; left: 0; width: 1280px; height: 720px; }
+        #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
 
-        #game-ui {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none; z-index: 10;
-        }
-
+        /* KONTROL KIRI ATAS (Audio, Fullscreen, Surrender) */
         .top-controls {
             position: absolute; top: 15px; left: 2%; display: flex; gap: 10px; pointer-events: auto; z-index: 50;
         }
@@ -55,8 +55,10 @@
             display: flex; justify-content: center; align-items: center; cursor: pointer;
             box-shadow: 0 4px 0 #1a252f, 0 4px 6px rgba(0,0,0,0.5); text-shadow: 1px 1px 0 #000;
         }
+        .mini-btn.danger { background: linear-gradient(to bottom, #e74c3c, #c0392b); }
         .mini-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #1a252f; }
 
+        /* HUD ATAS (Skor & Stage) */
         .hud {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             width: 800px; display: flex; justify-content: space-between; align-items: center;
@@ -72,9 +74,8 @@
         }
         .dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #2c3e50; }
 
-        .controls-left {
-            position: absolute; bottom: 20px; left: 20px; pointer-events: auto;
-        }
+        /* KONTROL BAWAH KIRI (D-PAD) */
+        .controls-left { position: absolute; bottom: 20px; left: 20px; pointer-events: auto; }
         .dpad { display: grid; grid-template-columns: 90px 90px 90px; grid-template-rows: 90px 90px 90px; gap: 12px; }
         .dpad-btn {
             background: linear-gradient(to bottom, #ffffff, #dcdde1); border: 5px solid #2c3e50; border-radius: 25px; 
@@ -84,33 +85,41 @@
         .dpad-btn:active, .dpad-btn.active { transform: translateY(8px); box-shadow: 0 0 0 #2c3e50; background: #f1c40f; color: #111; }
         .empty { visibility: hidden; }
 
-        .controls-right {
-            position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 20px; pointer-events: auto;
-        }
-        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 160px; }
+        /* KONTROL BAWAH KANAN (SVG BUTTONS & FIRE) */
+        .controls-right { position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 20px; pointer-events: auto; }
+        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 180px; }
+        
         .act-btn {
             background: linear-gradient(to bottom, #3498db, #2980b9); border: 3px solid #1a252f; border-radius: 12px; color: white;
-            font-size: 13px; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 0 #1a252f;
-            height: 40px; cursor: pointer; text-shadow: 1px 1px 0 #000; position: relative;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 5px 0 #1a252f;
+            height: 55px; cursor: pointer; position: relative; gap: 2px;
         }
-        .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; border-color: #2c3e50; box-shadow: 0 5px 0 #d35400; text-shadow: 1px 1px 0 #d35400; }
+        .act-btn span { font-size: 11px; text-shadow: 1px 1px 0 #000; letter-spacing: 1px; }
+        .act-btn svg { filter: drop-shadow(1px 2px 1px rgba(0,0,0,0.5)); }
+
+        .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; border-color: #2c3e50; box-shadow: 0 5px 0 #d35400; }
+        .act-btn.selected span { text-shadow: 1px 1px 0 #d35400; }
         .act-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #1a252f; }
-        .btn-full { grid-column: span 2; height: 70px; font-size: 24px;}
+        
+        .btn-full { grid-column: span 2; height: 65px; flex-direction: row; gap: 10px; }
+        .btn-full span { font-size: 14px; }
         
         #ammo-badge {
             background: #e74c3c; border: 2px solid white; border-radius: 50%;
-            width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center;
-            font-size: 10px; margin-left: 8px; text-shadow: none; color: white;
+            width: 20px; height: 20px; display: flex; justify-content: center; align-items: center;
+            font-size: 11px; color: white; position: absolute; top: -8px; right: -8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5); text-shadow: none; font-family: sans-serif; font-weight: bold;
         }
 
         .fire-btn { 
             background: linear-gradient(to bottom, #ff7675, #e74c3c); border: 5px solid #2c3e50; border-radius: 50%; 
-            width: 140px; height: 140px; display: flex; justify-content: center; align-items: center;
-            color: white; font-size: 40px; cursor: pointer; box-shadow: 0 12px 0 #c0392b, 0 15px 20px rgba(0,0,0,0.5);
+            width: 130px; height: 130px; display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 36px; cursor: pointer; box-shadow: 0 12px 0 #c0392b, 0 15px 20px rgba(0,0,0,0.5);
             text-shadow: 3px 3px 0 #c0392b;
         }
         .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(12px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
 
+        /* LAYAR START */
         #start-screen {
             position: absolute; z-index: 999; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column;
@@ -130,35 +139,30 @@
         #btn-start:active { transform: translateY(12px) scale(0.95); box-shadow: 0 0 0 #d35400; }
         @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
 
-        #game-over-overlay {
-            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); z-index: 90; pointer-events: auto;
-        }
+        /* MODAL GAME OVER */
+        #game-over-overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 90; pointer-events: auto; }
         #game-over-modal {
             display: none; position: absolute; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-            background: linear-gradient(to bottom, #f4d03f, #f39c12); 
-            border: 10px solid #5d4037; border-radius: 40px;
-            padding: 50px 40px 40px; text-align: center; width: 450px; 
-            box-shadow: 0 20px 0 #3e2723, 0 30px 50px rgba(0,0,0,0.8);
-            pointer-events: auto;
+            background: linear-gradient(to bottom, #f4d03f, #f39c12); border: 8px solid #5d4037; border-radius: 30px;
+            padding: 40px 30px 30px; text-align: center; width: 350px; box-shadow: 0 15px 0 #3e2723;
         }
         .modal-show { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
         
         #game-over-modal::before {
-            content: ''; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px;
-            border: 6px dashed rgba(255,255,255,0.4); border-radius: 25px; pointer-events: none;
+            content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 4px dashed rgba(255,255,255,0.4); border-radius: 20px; pointer-events: none;
         }
-        #game-over-msg { font-size: 60px; margin: 0 0 10px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
+        #game-over-msg { font-size: 50px; margin: 0 0 10px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
         .msg-sub {
-            background: rgba(255,255,255,0.8); color: #5d4037; font-family: sans-serif; font-weight: 900; font-size: 22px; 
-            padding: 10px 25px; border-radius: 20px; display: inline-block; margin-bottom: 35px; text-transform: uppercase; box-shadow: inset 0 3px 6px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.8); color: #5d4037; font-family: sans-serif; font-weight: 900; font-size: 16px; 
+            padding: 8px 20px; border-radius: 15px; display: inline-block; margin-bottom: 35px; text-transform: uppercase; box-shadow: inset 0 3px 6px rgba(0,0,0,0.2);
         }
         #btn-action {
-            padding: 25px 30px; color: #fff; border-radius: 25px; font-size: 32px; cursor: pointer; width: 100%; position: relative; z-index: 2;
-            font-family: 'Fredoka One', cursive; text-shadow: 3px 3px 0 rgba(0,0,0,0.3); border: none;
+            padding: 20px 25px; color: #fff; border-radius: 20px; font-size: 26px; cursor: pointer; width: 100%; position: relative; z-index: 2;
+            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); border: none;
         }
-        #btn-action:active { transform: translateY(10px) !important; box-shadow: 0 0 0 transparent !important; }
+        #btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
 
         @media (max-width: 850px) {
             .hud { width: 70%; left: 60%; }
@@ -167,10 +171,13 @@
             .controls-left, .controls-right { bottom: 10px; }
             .dpad { grid-template-columns: 45px 45px 45px; grid-template-rows: 45px 45px 45px; gap: 5px; }
             .dpad-btn { font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #2c3e50; border-radius: 12px; }
-            .squad-grid { width: 120px; gap: 6px; }
-            .act-btn { height: 35px; font-size: 11px; border-width: 2px; box-shadow: 0 4px 0 #1a252f; border-radius: 8px;}
-            .btn-full { height: 50px; font-size: 16px; }
-            .fire-btn { width: 65px; height: 65px; font-size: 16px; border-width: 4px; box-shadow: 0 6px 0 #c0392b; }
+            .squad-grid { width: 140px; gap: 6px; }
+            .act-btn { height: 45px; border-width: 2px; box-shadow: 0 4px 0 #1a252f; border-radius: 8px;}
+            .act-btn span { font-size: 9px; }
+            .act-btn svg { width: 18px; height: 18px; }
+            .btn-full { height: 50px; }
+            .btn-full span { font-size: 12px; }
+            .fire-btn { width: 75px; height: 75px; font-size: 18px; border-width: 4px; box-shadow: 0 6px 0 #c0392b; }
             #start-screen h1 { font-size: 40px; }
             #btn-start { font-size: 20px; padding: 12px 30px; border-width: 5px; box-shadow: 0 8px 0 #d35400;}
             .top-controls { left: 10px; top: 10px; gap: 5px;}
@@ -184,7 +191,7 @@
 
     <div id="rotate-msg">
         <h1>PLEASE ROTATE</h1>
-        <p>Hold your phone horizontally to play.</p>
+        <p>Landscape mode is required.</p>
         <div class="icon">📱</div>
     </div>
 
@@ -195,6 +202,11 @@
             <div class="top-controls">
                 <div class="mini-btn" id="btn-audio" onclick="toggleAudio()">🔊</div>
                 <div class="mini-btn" id="btn-fullscreen" onclick="toggleFullScreen()">⛶</div>
+                <div class="mini-btn danger" id="btn-surrender" onclick="surrenderGame()">
+                    <svg viewBox="0 0 448 512" width="18" fill="currentColor">
+                        <path d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24V64 352 488c0 13.3 10.7 24 24 24s24-10.7 24-24V352H384c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48V24z"/>
+                    </svg>
+                </div>
             </div>
 
             <div class="hud">
@@ -212,9 +224,19 @@
             
             <div class="controls-right">
                 <div class="squad-grid">
-                    <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">INF</div>
-                    <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
-                    <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON <span id="ammo-badge">5</span></div>
+                    <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">
+                        <svg viewBox="0 0 448 512" width="22"><path fill="currentColor" d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z"/></svg>
+                        <span>INF</span>
+                    </div>
+                    <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">
+                        <svg viewBox="0 0 448 512" width="22"><path fill="currentColor" d="M112 0c-26.5 0-48 21.5-48 48v8.5c0 14.5 11.2 26.5 25.3 27.6C163.5 92 224 163.7 224 256c0 10.2-.7 20.2-2 30.1l-60.6-24.2c-15.3-6.1-32.3.9-39 15.8L96 345c-20 44.5-59.5 76-107.5 86.8-6.1 1.4-10.5 6.7-10.5 13V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V368H277.6c11.7-21.1 18.4-45.3 18.4-71.1 0-77.9-63.1-141.1-141.1-141.1V48c0-26.5-21.5-48-48-48h-11.1c-13.8 0-25 11.2-25 25z"/></svg>
+                        <span>CAV</span>
+                    </div>
+                    <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">
+                        <svg viewBox="0 0 512 512" width="28"><path fill="currentColor" d="M440.5 71.5L400 112V80c0-8.8-7.2-16-16-16h-16c-8.8 0-16 7.2-16 16v89.4L317.1 204.3c-24-17.7-53.5-28.3-85.1-28.3-79.5 0-144 64.5-144 144s64.5 144 144 144 144-64.5 144-144c0-31.6-10.6-61.1-28.3-85.1L382.6 190h89.4c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16h-32l40.5-40.5c6.2-6.2 6.2-16.4 0-22.6l-11.3-11.3c-6.2-6.2-16.4-6.2-22.6 0zM232 400c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/></svg>
+                        <span>CANNON</span>
+                        <div id="ammo-badge">5</div>
+                    </div>
                 </div>
                 <div class="fire-btn" id="btn-fire">FIRE</div>
             </div>
@@ -234,41 +256,27 @@
     </div>
 
 <script>
-    // --- RESPONSIVE SCALER ---
-    const GAME_W = 1280, GAME_H = 720;
-    let scale = 1, offsetX = 0, offsetY = 0;
-
+    // --- FLEX SCALER (ANTI ERROR iOS) ---
     function applyScale() {
         const scaler = document.getElementById('screen-scaler');
-        const scaleX = window.innerWidth / GAME_W;
-        const scaleY = window.innerHeight / GAME_H;
-        scale = Math.min(scaleX, scaleY);
-        
+        const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
         scaler.style.transform = `scale(${scale})`;
-        
-        const leftOffset = (window.innerWidth - (GAME_W * scale)) / 2;
-        const topOffset = (window.innerHeight - (GAME_H * scale)) / 2;
-        scaler.style.left = `${leftOffset}px`;
-        scaler.style.top = `${topOffset}px`;
     }
     window.addEventListener('resize', applyScale);
     applyScale();
 
-    // --- FULLSCREEN API (SAFE FOR iOS) ---
     function toggleFullScreen() {
         playSound('click');
         try {
             if (!document.fullscreenElement) {
-                if(document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(e=>console.log(e));
-                }
+                if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e=>console.log(e));
             } else {
                 if (document.exitFullscreen) document.exitFullscreen();
             }
-        } catch(e) { console.log("Fullscreen not supported"); }
+        } catch(e) {}
     }
 
-    // --- AUDIO ENGINE (SAFE FOR iOS) ---
+    // --- AUDIO ENGINE ---
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     let actx = null;
     let gameHasStarted = false;
@@ -288,19 +296,14 @@
             if(!actx && AudioCtxClass) actx = new AudioCtxClass();
             if (actx && actx.state === 'suspended') actx.resume();
             
-            // Try Fullscreen quietly
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(()=>{});
-            }
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
 
             if(actx) {
-                const osc = actx.createOscillator();
-                const gain = actx.createGain();
-                gain.gain.value = 0; 
-                osc.connect(gain); gain.connect(actx.destination);
+                const osc = actx.createOscillator(); const gain = actx.createGain();
+                gain.gain.value = 0; osc.connect(gain); gain.connect(actx.destination);
                 osc.start(0); osc.stop(actx.currentTime + 0.1);
             }
-        } catch(e) { console.log("Init error", e); }
+        } catch(e) {}
         
         playSound('click');
         document.getElementById('start-screen').style.display = 'none';
@@ -356,7 +359,7 @@
         } catch(e) {}
     }
 
-    // --- INPUT CONTROL ---
+    // --- BINDING KONTROL ---
     const keys = { w:false, a:false, s:false, d:false, space:false };
     function bindCtrl(id, key) {
         const el = document.getElementById(id);
@@ -455,7 +458,6 @@
         confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: enemySpd, frame:0, ammo: 5, hp: 5, maxHp: 5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
         
         document.getElementById('ammo-badge').innerText = union.cannon.ammo;
-        document.getElementById('btn-can').style.opacity = 1;
         projectiles = []; fx = []; generateObstacles(3 + currentStage); 
 
         initTeam(union, 250, 1, 6, 3); initTeam(confed, 1030, -1, extraInf, extraCav); 
@@ -463,6 +465,31 @@
     }
 
     startStage(1);
+
+    // --- FUNGSI BENDERA PUTIH ---
+    window.surrenderGame = function() {
+        if(gameOver) return;
+        playSound('defeat');
+        gameOver = true;
+        isVictory = false;
+        
+        const overlay = document.getElementById('game-over-overlay');
+        const modal = document.getElementById('game-over-modal');
+        const msg = document.getElementById('game-over-msg');
+        const sub = document.getElementById('msg-sub');
+        const btn = document.getElementById('btn-action');
+        
+        msg.innerHTML = "SURRENDERED!";
+        msg.style.textShadow = "3px 3px 0 #c0392b, -2px -2px 0 #c0392b, 2px -2px 0 #c0392b, -2px 2px 0 #c0392b, 0 10px 0 #78281f";
+        sub.innerText = "You waved the white flag";
+        btn.innerText = "RETRY STAGE";
+        btn.style.background = "linear-gradient(to bottom, #e74c3c, #c0392b)";
+        btn.style.boxShadow = "0 8px 0 #78281f"; btn.style.borderColor = "#78281f";
+        
+        overlay.style.display = "block";
+        modal.style.display = "block";
+        modal.classList.add('modal-show');
+    };
 
     window.handleModalAction = function() {
         playSound('click');
@@ -500,7 +527,6 @@
                 
                 if (isUnion) {
                     document.getElementById('ammo-badge').innerText = cannon.ammo;
-                    if (cannon.ammo === 0) document.getElementById('btn-can').style.opacity = 0.5; 
                 }
             } else if (isUnion && keys.space) {
                 playSound('empty'); cannon.cd = 30;
@@ -609,14 +635,12 @@
                         u.alive = false; hit = true; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
                     }
                 });
-                
                 eTeam.cavalry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { 
                         u.hp--; hit = true; fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                         if (u.hp <= 0) { u.alive = false; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10}); }
                     }
                 });
-                
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
                     eTeam.cannon.hp--; hit = true; 
                     if (eTeam.cannon.hp <= 0) {
@@ -625,7 +649,6 @@
                         playSound('hitRock'); fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                     }
                 }
-
                 if(hit) { projectiles.splice(i, 1); } 
                 else if(p.life <= 0) projectiles.splice(i, 1);
             }
@@ -664,7 +687,6 @@
         
         if(!uAlive || !cAlive || isDraw) {
             gameOver = true;
-            
             const overlay = document.getElementById('game-over-overlay');
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
@@ -751,17 +773,11 @@
     }
 
     function render() {
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = "#050505"; ctx.fillRect(0,0, canvas.width, canvas.height); 
+        ctx.clearRect(0,0, 1280, 720);
         
-        ctx.save();
-        ctx.translate(offsetX, offsetY);
+        if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720);
+        else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
         
-        if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280 * scale, 720 * scale);
-        else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280 * scale, 720 * scale); }
-        
-        ctx.scale(scale, scale);
-
         if (timeOfDay === 'sunset') { ctx.fillStyle = "rgba(230, 126, 34, 0.25)"; ctx.fillRect(0,0,1280,720); } 
         else if (timeOfDay === 'night') { ctx.fillStyle = "rgba(44, 62, 80, 0.55)"; ctx.fillRect(0,0,1280,720); }
         
@@ -841,8 +857,6 @@
                 drawVoxel(f.x, f.y, 5, 5, 5, "#7f8c8d");
             }
         });
-
-        ctx.restore();
     }
 
     function loop() { update(); render(); requestAnimationFrame(loop); }
