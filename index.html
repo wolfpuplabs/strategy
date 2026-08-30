@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: 3D Low-Poly on Custom Map</title>
+    <title>North & South: Pro 3D Stylized</title>
     <style>
         body {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -19,7 +19,8 @@
         
         canvas {
             width: 100%; height: 100%; object-fit: contain;
-            background-color: #7bc05b; /* Fallback color */
+            background-color: #7bc05b;
+            image-rendering: optimizeQuality;
         }
         
         /* UI Panel Atas */
@@ -28,12 +29,12 @@
             display: flex; justify-content: space-between; z-index: 10; pointer-events: none;
         }
         .badge {
-            background: rgba(0,0,0,0.8); padding: 8px 25px; border-radius: 20px;
+            background: rgba(0,0,0,0.85); padding: 8px 25px; border-radius: 20px;
             border: 2px solid rgba(255,255,255,0.3); font-weight: bold; color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(5px);
             display: flex; align-items: center; gap: 8px; font-size: 14px;
         }
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.5); }
 
         /* Mobile Controls */
         #controls {
@@ -47,33 +48,33 @@
             border-radius: 15px; display: flex; justify-content: center; align-items: center;
             font-size: 24px; color: white; cursor: pointer; backdrop-filter: blur(5px);
         }
-        .dpad-btn:active, .dpad-btn.active { background: rgba(255,255,255,0.8); transform: scale(0.95); color: #111; }
+        .dpad-btn:active, .dpad-btn.active { background: rgba(255,255,255,0.9); transform: scale(0.95); color: #111; }
         .empty { visibility: hidden; }
 
         .actions { display: flex; align-items: flex-end; gap: 15px; }
         .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 150px; }
         .act-btn {
-            background: #2c3e50; border: 2px solid #7f8c8d; border-radius: 12px; color: white;
+            background: linear-gradient(to bottom, #34495e, #2c3e50); border: 2px solid #7f8c8d; border-radius: 12px; color: white;
             font-weight: bold; font-size: 13px; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5); height: 40px; cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6); height: 40px; cursor: pointer; text-shadow: 1px 1px 2px black;
         }
-        .act-btn.selected { background: #f1c40f; color: #111; border-color: #fff; box-shadow: 0 0 15px rgba(241,196,15,0.5); }
+        .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #111; border-color: #fff; box-shadow: 0 0 15px rgba(241,196,15,0.6); text-shadow: none; }
         .act-btn:active { transform: scale(0.95); }
         .btn-full { grid-column: span 2; }
         
         .fire-btn { 
-            background: #e74c3c; border: 4px solid #ff7675; border-radius: 50%; 
+            background: linear-gradient(to bottom, #ff7675, #e74c3c); border: 4px solid #fff; border-radius: 50%; 
             width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;
-            color: white; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+            color: white; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+            text-shadow: 1px 1px 3px black;
         }
-        .fire-btn:active, .fire-btn.active { background: #c0392b; border-color: #e74c3c; transform: scale(0.95); }
+        .fire-btn:active, .fire-btn.active { background: #c0392b; border-color: #f1c40f; transform: scale(0.95); }
 
-        /* MODAL GAME OVER */
         #game-over-modal {
             display: none; position: absolute; z-index: 100;
             top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(0,0,0,0.9); border: 3px solid #f1c40f; border-radius: 15px;
-            padding: 30px; text-align: center; color: white; width: 250px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            padding: 30px; text-align: center; color: white; width: 250px; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
         }
         #btn-restart {
             margin-top: 20px; padding: 12px 20px; background: #f1c40f; color: #111;
@@ -122,9 +123,9 @@
 
 <script>
     const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: false });
 
-    // Muat gambar peta baru
+    // Load Peta Image (image.png)
     const bgImage = new Image();
     bgImage.src = 'image.png'; 
 
@@ -169,24 +170,14 @@
         document.getElementById('btn-' + type.substring(0,3)).classList.add('selected');
     };
 
-    // --- COLLIDER PETA (Sesuai image.png) ---
-    // Diatur berdasarkan resolusi 1280x720
-    const MAP = {
-        riverX: 520, riverW: 220, // Area sungai di tengah peta
-        bridgeY: 310, bridgeH: 130 // Area jembatan kayu untuk menyeberang
-    };
+    // COLLIDER MAP
+    const MAP = { riverX: 520, riverW: 220, bridgeY: 310, bridgeH: 130 };
 
     function canMoveTo(x, y) {
-        // Batas Layar
         if (x < 30 || x > 1250 || y < 60 || y > 680) return false;
-        
-        // Deteksi Air (Collider Sungai)
         let inWaterX = x > MAP.riverX && x < (MAP.riverX + MAP.riverW);
         let onBridgeY = y > MAP.bridgeY && y < (MAP.bridgeY + MAP.bridgeH);
-        
-        // Jika koordinat X ada di sungai, tapi Y tidak di jembatan = Nabrak Air! (Gagal jalan)
         if (inWaterX && !onBridgeY) return false;
-
         return true;
     }
 
@@ -194,14 +185,14 @@
     let union, confed, projectiles, fx;
 
     function init(team, startX, dir) {
-        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*35*-dir, y: 150 + Math.floor(i/2)*80, speed: 2.5, cd: 0, alive: true, team: dir===1?0:1, frame: 0 });
-        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 110*-dir, y: 180 + i*90, speed: 4.5, alive: true, team: dir===1?0:1, frame: 0 });
+        for(let i=0; i<6; i++) team.infantry.push({ x: startX + (i%2)*40*-dir, y: 150 + Math.floor(i/2)*80, speed: 2.5, cd: 0, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
+        for(let i=0; i<3; i++) team.cavalry.push({ x: startX + 110*-dir, y: 180 + i*90, speed: 4.5, alive: true, team: dir===1?0:1, frame: Math.random()*10 });
     }
 
     window.resetGame = function() {
         document.getElementById('game-over-modal').style.display = 'none';
-        union = { color: '#2980b9', cannon: { x: 100, y: 350, alive: true, cd: 0, speed: 3 }, infantry: [], cavalry: [] };
-        confed = { color: '#c0392b', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: 2.5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
+        union = { color: '#2980b9', pants: '#1c5982', cannon: { x: 100, y: 350, alive: true, cd: 0, speed: 3, frame:0 }, infantry: [], cavalry: [] };
+        confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: 2.5, frame:0 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
         projectiles = []; fx = [];
         init(union, 250, 1); init(confed, 1030, -1);
         gameOver = false; keys.space = false;
@@ -215,25 +206,22 @@
                 let ny = u.y + dy * u.speed;
                 let moved = false;
                 
-                // Sliding Collision
                 if (canMoveTo(nx, u.y)) { u.x = nx; moved = true; }
                 if (canMoveTo(u.x, ny)) { u.y = ny; moved = true; }
 
-                // AI Pathfinding: Jika AI mentok sungai, paksa geser Y ke arah jembatan
                 if (isAI && !moved && dx < 0 && u.x >= MAP.riverX + MAP.riverW - 10) {
-                    let bridgeCenter = MAP.bridgeY + (MAP.bridgeH / 2);
-                    if (u.y < bridgeCenter - 10) u.y += u.speed;
-                    else if (u.y > bridgeCenter + 10) u.y -= u.speed;
+                    let bc = MAP.bridgeY + (MAP.bridgeH / 2);
+                    if (u.y < bc - 10) u.y += u.speed;
+                    else if (u.y > bc + 10) u.y -= u.speed;
                 }
-
-                if(moved && (dx!==0 || dy!==0)) u.frame += 0.5;
+                if(moved && (dx!==0 || dy!==0)) u.frame += 0.8;
             }
         });
     }
 
     function fireCannon(cannon, isUnion) {
         if(cannon.cd <= 0 && cannon.alive) {
-            projectiles.push({ x: isUnion ? cannon.x+25 : cannon.x-25, y: cannon.y-5, vx: isUnion ? 12 : -12, type: 'ball', isUnion: isUnion, life: 90 });
+            projectiles.push({ x: isUnion ? cannon.x+40 : cannon.x-40, y: cannon.y-25, vx: isUnion ? 15 : -15, type: 'ball', isUnion: isUnion, life: 90 });
             cannon.cd = 60;
         }
     }
@@ -249,12 +237,13 @@
         // Player Update
         if(activeSquad === 'cannon' && union.cannon.alive) {
             union.cannon.y += dy * union.cannon.speed;
+            if(dy !== 0) union.cannon.frame += 0.5;
             if(union.cannon.y < 80) union.cannon.y = 80; if(union.cannon.y > 680) union.cannon.y = 680;
             if(keys.space) fireCannon(union.cannon, true);
         } else if(activeSquad === 'infantry') {
             moveGroup(union.infantry, dx, dy);
             if(keys.space) union.infantry.forEach(u => {
-                if(u.alive && u.cd <= 0) { projectiles.push({ x: u.x+15, y: u.y, vx: 12, type: 'bullet', isUnion: true, life: 60 }); u.cd = 30; }
+                if(u.alive && u.cd <= 0) { projectiles.push({ x: u.x+20, y: u.y-25, vx: 14, type: 'bullet', isUnion: true, life: 60 }); u.cd = 25; }
             });
         } else if(activeSquad === 'cavalry') {
             moveGroup(union.cavalry, dx, dy);
@@ -274,13 +263,15 @@
         }
 
         if(confed.aiState === 'cannon' && confed.cannon.alive) {
-            confed.cannon.y += (Math.random() > 0.5 ? 1 : -1) * confed.cannon.speed;
+            let aiDy = (Math.random() > 0.5 ? 1 : -1);
+            confed.cannon.y += aiDy * confed.cannon.speed;
+            confed.cannon.frame += 0.5;
             if(confed.cannon.y < 80) confed.cannon.y = 80; if(confed.cannon.y > 680) confed.cannon.y = 680;
             if(Math.random() < 0.03) fireCannon(confed.cannon, false);
         } else if(confed.aiState === 'infantry') {
-            moveGroup(confed.infantry, -0.8, (Math.random()-0.5), true); // isAI = true
+            moveGroup(confed.infantry, -0.8, (Math.random()-0.5), true);
             if(Math.random() < 0.08) confed.infantry.forEach(u => {
-                if(u.alive && u.cd <= 0 && Math.random() < 0.3) { projectiles.push({ x: u.x-15, y: u.y, vx: -12, type: 'bullet', isUnion: false, life: 60 }); u.cd = 40; }
+                if(u.alive && u.cd <= 0 && Math.random() < 0.3) { projectiles.push({ x: u.x-20, y: u.y-25, vx: -14, type: 'bullet', isUnion: false, life: 60 }); u.cd = 40; }
             });
         } else if(confed.aiState === 'cavalry') {
             moveGroup(confed.cavalry, -1.2, (Math.random()-0.5)*2, true);
@@ -294,15 +285,15 @@
             if(p.type === 'ball' && p.life <= 0) {
                 fx.push({ x: p.x, y: p.y, r: 0, life: 25 });
                 let eTeam = p.isUnion ? confed : union;
-                eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 55) u.alive = false; });
-                eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 55) u.alive = false; });
-                if(eTeam.cannon.alive && Math.hypot(eTeam.cannon.x-p.x, eTeam.cannon.y-p.y) < 65) eTeam.cannon.alive = false;
+                eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 65) u.alive = false; });
+                eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 65) u.alive = false; });
+                if(eTeam.cannon.alive && Math.hypot(eTeam.cannon.x-p.x, eTeam.cannon.y-p.y) < 75) eTeam.cannon.alive = false;
                 projectiles.splice(i, 1); continue;
             }
             if(p.type === 'bullet') {
                 let hit = false; let eTeam = p.isUnion ? confed : union;
-                eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<15 && Math.abs(u.y-p.y)<15) { u.alive = false; hit = true; }});
-                eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<20 && Math.abs(u.y-p.y)<20) { u.alive = false; hit = true; }});
+                eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18) { u.alive = false; hit = true; }});
+                eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { u.alive = false; hit = true; }});
                 if(hit || p.life <= 0) projectiles.splice(i, 1);
             }
         }
@@ -311,9 +302,9 @@
         // Melee Clash
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
-            confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 30) ci.alive = false; });
-            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 30) { cc.alive = false; uc.alive = false; }});
-            if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 40) confed.cannon.alive = false;
+            confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 35) ci.alive = false; });
+            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 35) { cc.alive = false; uc.alive = false; }});
+            if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 45) confed.cannon.alive = false;
         });
 
         // Win Cond
@@ -329,7 +320,7 @@
         }
     }
 
-    // --- 3D LOW POLY ENGINE (Voxel Style) ---
+    // --- PRO 3D VOXEL ENGINE DENGAN TEKSTUR GRADASI ---
     function shadeCol(col, amt) {
         let num = parseInt(col.slice(1), 16);
         let r = (num >> 16) + amt; if(r>255) r=255; else if(r<0) r=0;
@@ -338,88 +329,147 @@
         return "#" + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0');
     }
 
-    function drawVoxel(x, y, w, h, d, color) {
-        let topC = shadeCol(color, 35);
-        let rightC = shadeCol(color, -25);
+    // Render Voxel dengan tekstur material (Gradasi) dan Edge Highlighting
+    function drawVoxel(x, y, w, h, d, color, isMetal = false) {
+        let topC = shadeCol(color, 40);
+        let rightC = shadeCol(color, -30);
+        let frontC = color;
+
+        // Simulasi Tekstur Material Gradasi
+        let gradF = ctx.createLinearGradient(0, y-h, 0, y);
+        gradF.addColorStop(0, shadeCol(color, isMetal ? 50 : 15));
+        gradF.addColorStop(1, shadeCol(color, isMetal ? -40 : -15));
         
-        ctx.fillStyle = color; ctx.fillRect(x - w/2, y - h, w, h); // Front
+        let gradR = ctx.createLinearGradient(0, y-h, 0, y);
+        gradR.addColorStop(0, shadeCol(rightC, 15));
+        gradR.addColorStop(1, shadeCol(rightC, -20));
+
+        // Front Face
+        ctx.fillStyle = gradF; 
+        ctx.fillRect(x - w/2, y - h, w, h);
         
-        ctx.fillStyle = topC; ctx.beginPath(); // Top
+        // Top Face
+        ctx.fillStyle = topC; ctx.beginPath();
         ctx.moveTo(x - w/2, y - h); ctx.lineTo(x - w/2 + d, y - h - d);
         ctx.lineTo(x + w/2 + d, y - h - d); ctx.lineTo(x + w/2, y - h); ctx.fill();
         
-        ctx.fillStyle = rightC; ctx.beginPath(); // Right
+        // Right Face
+        ctx.fillStyle = gradR; ctx.beginPath();
         ctx.moveTo(x + w/2, y - h); ctx.lineTo(x + w/2 + d, y - h - d);
         ctx.lineTo(x + w/2 + d, y - d); ctx.lineTo(x + w/2, y); ctx.fill();
+
+        // Edge Highlight (Menambah kedalaman 3D)
+        ctx.strokeStyle = "rgba(255,255,255,0.15)"; ctx.lineWidth = 1;
+        ctx.strokeRect(x - w/2, y - h, w, h);
+    }
+
+    // Render Roda dengan Jari-jari
+    function drawWheel(x, y, radius, rot) {
+        ctx.save();
+        ctx.translate(x, y); ctx.rotate(rot);
+        ctx.fillStyle = "#3e2723";
+        ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#111";
+        ctx.beginPath(); ctx.arc(0, 0, radius-4, 0, Math.PI*2); ctx.fill();
+        // Spokes
+        ctx.strokeStyle = "#8d6e63"; ctx.lineWidth = 3;
+        for(let i=0; i<4; i++) {
+            ctx.rotate(Math.PI/4);
+            ctx.beginPath(); ctx.moveTo(-radius, 0); ctx.lineTo(radius, 0); ctx.stroke();
+        }
+        ctx.fillStyle = "#5d4037"; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
     }
 
     function render() {
-        ctx.clearRect(0,0,1280,720);
-        
-        // GAMBAR BACKGROUND
+        // GAMBAR PETA UTAMA
         if(bgImage.complete) {
             ctx.drawImage(bgImage, 0, 0, 1280, 720);
         } else {
             ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720);
         }
         
-        // Highlight Lingkaran Pasukan Dipilih
+        // Highlight Lingkaran 
         ctx.fillStyle = "rgba(241, 196, 15, 0.4)";
-        if(activeSquad === 'cannon' && union.cannon.alive) ctx.fillRect(union.cannon.x-35, union.cannon.y-25, 70, 50);
-        else if(activeSquad === 'infantry') union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 20, 12, 0, 0, Math.PI*2); ctx.fill(); }});
-        else if(activeSquad === 'cavalry') union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 30, 15, 0, 0, Math.PI*2); ctx.fill(); }});
+        if(activeSquad === 'cannon' && union.cannon.alive) ctx.fillRect(union.cannon.x-40, union.cannon.y-30, 80, 60);
+        else if(activeSquad === 'infantry') union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 20, 10, 0, 0, Math.PI*2); ctx.fill(); }});
+        else if(activeSquad === 'cavalry') union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 35, 15, 0, 0, Math.PI*2); ctx.fill(); }});
 
-        // Depth Sorting (Z-Index untuk Voxel 3D)
         let renders = [];
-        if(union.cannon.alive) renders.push({y: union.cannon.y, draw: ()=> drawVoxelUnit(union.cannon, 'union', 'cannon')});
-        if(confed.cannon.alive) renders.push({y: confed.cannon.y, draw: ()=> drawVoxelUnit(confed.cannon, 'confed', 'cannon')});
-        union.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'union', 'infantry')}); });
-        union.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'union', 'cavalry')}); });
-        confed.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'confed', 'infantry')}); });
-        confed.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawVoxelUnit(u, 'confed', 'cavalry')}); });
+        if(union.cannon.alive) renders.push({y: union.cannon.y, draw: ()=> drawDetailedUnit(union.cannon, union, 'cannon', 1)});
+        if(confed.cannon.alive) renders.push({y: confed.cannon.y, draw: ()=> drawDetailedUnit(confed.cannon, confed, 'cannon', -1)});
+        union.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawDetailedUnit(u, union, 'infantry', 1)}); });
+        union.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawDetailedUnit(u, union, 'cavalry', 1)}); });
+        confed.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawDetailedUnit(u, confed, 'infantry', -1)}); });
+        confed.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=> drawDetailedUnit(u, confed, 'cavalry', -1)}); });
 
         renders.sort((a,b) => a.y - b.y);
 
-        function drawVoxelUnit(u, team, type) {
-            let col = team === 'union' ? union.color : confed.color;
-            let pCol = team === 'union' ? "#1c5982" : "#7f8c8d"; // Celana
-            let bob = u.frame ? Math.abs(Math.sin(u.frame)) * 5 : 0; // Animasi loncat
-            let dir = team === 'union' ? 1 : -1;
+        function drawDetailedUnit(u, team, type, dir) {
+            let col = team.color;
+            let pCol = team.pants;
+            let walk = Math.sin(u.frame) * 8; // Animasi Kaki
+            let bob = Math.abs(Math.sin(u.frame)) * 4;
 
-            // Bayangan 
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.beginPath(); ctx.ellipse(u.x, u.y, type==='cavalry'?22:12, 6, 0, 0, Math.PI*2); ctx.fill();
+            // Shadow Drop
+            ctx.fillStyle = "rgba(0,0,0,0.35)";
+            ctx.beginPath(); ctx.ellipse(u.x, u.y, type==='cavalry'?25:(type==='cannon'?30:12), type==='cannon'?12:6, 0, 0, Math.PI*2); ctx.fill();
             
             if(type === 'cannon') {
-                drawVoxel(u.x, u.y, 35, 20, 16, "#8d6e63"); // Bodi Kayu
-                drawVoxel(u.x - 20, u.y + 5, 10, 30, 10, "#3e2723"); // Roda Kiri
-                drawVoxel(u.x + 20, u.y + 5, 10, 30, 10, "#3e2723"); // Roda Kanan
-                drawVoxel(u.x + (15*dir), u.y - 12, 40, 12, 12, "#2c3e50"); // Laras Meriam Besi
+                // Sasis Meriam
+                drawVoxel(u.x, u.y - 5, 45, 15, 15, "#795548"); 
+                // Laras Metalik
+                drawVoxel(u.x + (15*dir), u.y - 20, 50, 14, 14, "#2c3e50", true); 
+                // Ujung Meriam (Muzzle)
+                drawVoxel(u.x + (45*dir), u.y - 19, 8, 16, 16, "#1a252f", true);
+                // Roda
+                drawWheel(u.x - 15, u.y - 5, 18, u.frame * 0.5 * dir);
+                drawWheel(u.x + 15, u.y - 5, 18, u.frame * 0.5 * dir);
             } 
             else if (type === 'infantry') {
-                drawVoxel(u.x, u.y - bob, 14, 12, 8, pCol); // Celana
-                drawVoxel(u.x, u.y - 12 - bob, 16, 14, 9, col); // Baju
-                drawVoxel(u.x, u.y - 18 - bob, 18, 3, 10, "#ecf0f1"); // Sabuk putih
-                drawVoxel(u.x, u.y - 26 - bob, 10, 10, 8, "#f1c27d"); // Kepala
-                drawVoxel(u.x + (2*dir), u.y - 36 - bob, 12, 6, 10, "#2c3e50"); // Topi (Kepi)
-                drawVoxel(u.x + (10*dir), u.y - 10 - bob, 26, 4, 4, "#333"); // Senapan
+                // Kaki Kiri & Kanan
+                drawVoxel(u.x - (4*dir) + (walk*dir), u.y, 6, 12, 6, pCol);
+                drawVoxel(u.x + (4*dir) - (walk*dir), u.y, 6, 12, 6, pCol);
+                // Badan & Sabuk
+                drawVoxel(u.x, u.y - 12 - bob, 16, 15, 10, col);
+                drawVoxel(u.x, u.y - 15 - bob, 17, 3, 11, "#222"); // Sabuk hitam
+                drawVoxel(u.x + (8*dir), u.y - 15 - bob, 2, 4, 4, "#f1c40f"); // Gesper Emas
+                // Wajah & Topi
+                drawVoxel(u.x, u.y - 27 - bob, 10, 10, 10, "#f1c27d");
+                drawVoxel(u.x, u.y - 37 - bob, 12, 6, 12, col); // Topi Kepi
+                drawVoxel(u.x + (6*dir), u.y - 37 - bob, 8, 1, 10, "#111"); // Lidah Topi
+                // Senapan (Kayu + Besi)
+                drawVoxel(u.x + (10*dir), u.y - 12 - bob, 25, 3, 3, "#5d4037"); // Gagang Kayu
+                drawVoxel(u.x + (25*dir), u.y - 13 - bob, 15, 2, 2, "#95a5a6", true); // Laras Metal
             } 
             else if (type === 'cavalry') {
-                let hCol = team === 'union' ? "#5d4037" : "#795548";
-                drawVoxel(u.x - (6*dir), u.y - bob, 36, 20, 16, hCol); // Badan Kuda
-                drawVoxel(u.x + (18*dir), u.y - 20 - bob, 10, 16, 10, hCol); // Kepala Kuda
-                drawVoxel(u.x - (6*dir), u.y - 20 - bob, 14, 14, 10, col); // Badan Penunggang
-                drawVoxel(u.x - (6*dir), u.y - 34 - bob, 10, 10, 8, "#f1c27d"); // Kepala Penunggang
-                drawVoxel(u.x + (12*dir), u.y - 24 - bob, 20, 2, 2, "#bdc3c7"); // Pedang
+                let hCol = dir===1 ? "#5d4037" : "#4e342e"; // Warna kuda
+                // Kaki Kuda (4 Kaki Berlari)
+                drawVoxel(u.x - 12 + walk, u.y, 5, 12, 5, "#3e2723");
+                drawVoxel(u.x - 6 - walk, u.y, 5, 12, 5, "#3e2723");
+                drawVoxel(u.x + 12 - walk, u.y, 5, 12, 5, "#3e2723");
+                drawVoxel(u.x + 18 + walk, u.y, 5, 12, 5, "#3e2723");
+                
+                // Bodi Kuda
+                drawVoxel(u.x, u.y - 12 - bob, 45, 18, 16, hCol); 
+                drawVoxel(u.x - (25*dir), u.y - 16 - bob, 6, 12, 4, "#222"); // Ekor
+                drawVoxel(u.x + (20*dir), u.y - 28 - bob, 12, 16, 10, hCol); // Kepala Kuda
+                drawVoxel(u.x + (15*dir), u.y - 32 - bob, 6, 14, 4, "#222"); // Surai (Rambut)
+
+                // Penunggang
+                drawVoxel(u.x - (5*dir), u.y - 28 - bob, 14, 14, 10, col); // Baju Rider
+                drawVoxel(u.x - (5*dir), u.y - 42 - bob, 10, 10, 10, "#f1c27d"); // Kepala Rider
+                drawVoxel(u.x - (5*dir), u.y - 52 - bob, 12, 6, 12, col); // Topi Rider
+                drawVoxel(u.x + (15*dir), u.y - 35 - bob, 22, 2, 3, "#ecf0f1", true); // Pedang Mengkilap
             }
         }
         
         renders.forEach(r => r.draw());
 
-        // Gambar Proyektil & Ledakan
+        // Proyektil & Efek
         projectiles.forEach(p => {
-            ctx.fillStyle = p.type==='ball' ? "#222" : "#f1c40f";
-            ctx.beginPath(); ctx.arc(p.x, p.y - 8, p.type==='ball'?8:3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = p.type==='ball' ? "#111" : "#f1c40f";
+            ctx.beginPath(); ctx.arc(p.x, p.y - 12, p.type==='ball'?8:3, 0, Math.PI*2); ctx.fill();
         });
         fx.forEach(f => {
             ctx.fillStyle = `rgba(231, 76, 60, ${f.life/25})`;
