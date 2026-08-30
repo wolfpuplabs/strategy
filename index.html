@@ -3,65 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Classic 1989 Edition</title>
+    <title>North & South: Mobile Classic</title>
     <style>
         body {
             margin: 0;
-            background-color: #222;
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 0;
+            background-color: #111;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* Mencegah zoom/scroll di HP */
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
+        
         #game-container {
             position: relative;
-            margin-top: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            border: 4px solid #555;
-        }
-        canvas {
-            display: block;
-            background-color: #55a630;
-            image-rendering: pixelated;
-        }
-        .ui-panel {
+            width: 100%;
+            height: 100%;
             display: flex;
-            justify-content: space-between;
-            width: 800px;
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: bold;
+            justify-content: center;
+            align-items: center;
         }
-        .controls-hint {
-            color: #f1c40f;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
+
+        canvas {
+            background-color: #6eb949;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            image-rendering: pixelated; /* Menjaga ketajaman sprite */
+            transform-origin: center center;
         }
-        /* Mobile Controls */
-        #mobile-controls {
-            display: none;
+
+        /* UI Panel Atas */
+        .ui-top {
+            position: absolute;
+            top: 10px;
             width: 100%;
             max-width: 800px;
+            display: flex;
             justify-content: space-between;
-            margin-top: 20px;
             padding: 0 20px;
             box-sizing: border-box;
+            pointer-events: none;
+            z-index: 10;
         }
-        .dpad, .action-btns { display: grid; gap: 10px; }
-        .dpad { grid-template-columns: 50px 50px 50px; grid-template-rows: 50px 50px; }
-        .btn { background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; user-select: none; }
-        .btn:active { background: rgba(255,255,255,0.5); }
+        .team-badge {
+            background: rgba(0,0,0,0.6);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 2px solid white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Kontrol Mobile (D-Pad & Aksi) */
+        #mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            z-index: 20;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 5px;
+        }
+        .dpad-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            user-select: none;
+            color: white;
+            backdrop-filter: blur(4px);
+        }
+        .dpad-btn:active { background: rgba(255,255,255,0.6); }
         .empty { visibility: hidden; }
-        @media (max-width: 850px) {
-            #game-container { width: 100vw; border: none; margin-top: 0; }
-            canvas { width: 100vw; height: auto; }
-            .ui-panel { width: 100vw; padding: 0 10px; box-sizing: border-box; }
-            #mobile-controls { display: flex; }
-            .controls-hint { display: none; }
+
+        .action-pad {
+            display: grid;
+            grid-template-columns: 70px 70px;
+            grid-template-rows: 60px 60px;
+            gap: 10px;
+            align-items: end;
+        }
+        .act-btn {
+            background: #2980b9;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        .act-btn:active { transform: scale(0.95); background: #3498db; }
+        .fire-btn {
+            background: #e74c3c;
+            width: 150px;
+            border-radius: 30px;
+            grid-column: span 2;
+            font-size: 18px;
+        }
+        .fire-btn:active { background: #c0392b; }
+
+        @media (max-width: 700px) {
+            .dpad { grid-template-columns: 50px 50px 50px; grid-template-rows: 50px 50px 50px; }
+            .action-pad { grid-template-columns: 60px 60px; grid-template-rows: 50px 50px; }
+            .fire-btn { width: 130px; }
         }
     </style>
 </head>
@@ -69,28 +132,31 @@
 
     <div id="game-container">
         <canvas id="gameCanvas" width="800" height="450"></canvas>
-    </div>
 
-    <div class="ui-panel">
-        <div style="color: #3498db;">Union (Player)</div>
-        <div id="status">Pilih Pasukan: 1 (Infantri), 2 (Kavaleri), 3 (Meriam)</div>
-        <div style="color: #e74c3c;">Confederate (AI)</div>
-    </div>
-
-    <div class="controls-hint">
-        <b>[1, 2, 3]</b> Ganti Pasukan | <b>[W,A,S,D] / Panah</b> Gerak | <b>[SPASI]</b> Serang / Tembak
-    </div>
-
-    <div id="mobile-controls">
-        <div class="dpad">
-            <div class="empty"></div><button class="btn" id="btn-up">▲</button><div class="empty"></div>
-            <button class="btn" id="btn-left">◀</button><button class="btn" id="btn-down">▼</button><button class="btn" id="btn-right">▶</button>
+        <div class="ui-top">
+            <div class="team-badge" style="color: #3498db;">🔵 Union</div>
+            <div class="team-badge" id="squad-info" style="color: #f1c40f;">Squad: Infantry</div>
+            <div class="team-badge" style="color: #e74c3c;">🔴 Confederate</div>
         </div>
-        <div class="action-btns" style="grid-template-columns: 60px 60px; grid-template-rows: 50px 50px;">
-            <button class="btn" onclick="selectSquad('infantry')">Inf</button>
-            <button class="btn" onclick="selectSquad('cavalry')">Cav</button>
-            <button class="btn" onclick="selectSquad('cannon')">Can</button>
-            <button class="btn" style="background:#e74c3c;" id="btn-fire">FIRE</button>
+
+        <div id="mobile-controls">
+            <!-- D-PAD -->
+            <div class="dpad">
+                <div class="empty"></div>
+                <div class="dpad-btn" id="btn-up">▲</div>
+                <div class="empty"></div>
+                <div class="dpad-btn" id="btn-left">◀</div>
+                <div class="dpad-btn" id="btn-down">▼</div>
+                <div class="dpad-btn" id="btn-right">▶</div>
+            </div>
+            
+            <!-- ACTION BUTTONS -->
+            <div class="action-pad">
+                <div class="act-btn" onclick="setSquad('infantry')">INF</div>
+                <div class="act-btn" onclick="setSquad('cavalry')">CAV</div>
+                <div class="act-btn" onclick="setSquad('cannon')" style="grid-column:span 2; border-radius:15px; height:40px;">CANNON</div>
+                <div class="act-btn fire-btn" id="btn-fire">🔥 FIRE</div>
+            </div>
         </div>
     </div>
 
@@ -98,337 +164,251 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Game State
-    let gameOver = false;
-    let activeSquad = 'infantry'; // 'infantry', 'cavalry', 'cannon'
-    
-    // Input State
+    // Resolusi Logis (Game World)
+    const GAME_W = 800;
+    const GAME_H = 450;
+
+    // Responsive Scaling
+    function resizeCanvas() {
+        const scale = Math.min(window.innerWidth / GAME_W, window.innerHeight / GAME_H);
+        canvas.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Sprite Data Map (Koordinat image.png)
+    const spriteSheet = new Image();
+    spriteSheet.src = 'image.png';
+    let spritesReady = false;
+    spriteSheet.onload = () => { spritesReady = true; };
+
+    const S = {
+        bridge: [310, 40, 160, 110, -80, -55],
+        tree: [340, 260, 150, 150, -75, -120],
+        boom: [190, 550, 70, 70, -35, -35],
+        union: {
+            infantry: [[510, 40, 40, 50, -20, -35], [555, 40, 40, 50, -20, -35]],
+            cavalry: [[510, 160, 60, 65, -30, -45], [580, 160, 60, 65, -30, -45]],
+            cannon: [[800, 30, 80, 70, -40, -45]]
+        },
+        confed: {
+            infantry: [[380, 510, 40, 50, -20, -35], [425, 510, 40, 50, -20, -35]],
+            cavalry: [[510, 630, 60, 65, -30, -45], [580, 630, 60, 65, -30, -45]],
+            cannon: [[420, 870, 80, 70, -40, -45]]
+        }
+    };
+
+    function drawSprite(spriteData, x, y, flip = false) {
+        if (!spritesReady) return;
+        let [sx, sy, sw, sh, ox, oy] = spriteData;
+        ctx.save();
+        ctx.translate(x, y);
+        if (flip) ctx.scale(-1, 1);
+        ctx.drawImage(spriteSheet, sx, sy, sw, sh, ox, oy, sw, sh);
+        ctx.restore();
+    }
+
+    // Input Controller
     const keys = { w:false, a:false, s:false, d:false, space:false };
 
-    // Structuring Teams
-    let union = {
-        cannon: { type: 'cannon', x: 40, y: 225, alive: true, cd: 0, speed: 2, color: '#2980b9' },
-        infantry: [],
-        cavalry: []
-    };
+    function bindTouch(id, key) {
+        const el = document.getElementById(id);
+        const press = (e) => { e.preventDefault(); keys[key] = true; };
+        const release = (e) => { e.preventDefault(); keys[key] = false; };
+        el.addEventListener('touchstart', press);
+        el.addEventListener('touchend', release);
+        el.addEventListener('mousedown', press);
+        el.addEventListener('mouseup', release);
+        el.addEventListener('mouseleave', release);
+    }
+    bindTouch('btn-up', 'w'); bindTouch('btn-down', 's');
+    bindTouch('btn-left', 'a'); bindTouch('btn-right', 'd');
+    bindTouch('btn-fire', 'space');
+
+    // Game Logic
+    let gameOver = false;
+    let frames = 0;
+    let activeSquad = 'infantry';
     
-    let confed = {
-        cannon: { type: 'cannon', x: 760, y: 225, alive: true, cd: 0, speed: 1.5, color: '#7f8c8d' },
-        infantry: [],
-        cavalry: [],
-        aiState: 'infantry',
-        aiTimer: 0
+    window.setSquad = function(sq) { 
+        activeSquad = sq; 
+        document.getElementById('squad-info').innerText = 'Squad: ' + sq.toUpperCase();
     };
 
-    let projectiles = [];
-    let explosions = [];
+    let union = { cannon: { x: 50, y: 225, alive: true, cd: 0, speed: 2 }, infantry: [], cavalry: [] };
+    let confed = { cannon: { x: 750, y: 225, alive: true, cd: 0, speed: 1.5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
+    let projectiles = [], fx = [];
 
-    // Initialize Units (Grid formation)
-    function initTeam(team, isUnion) {
-        let startX = isUnion ? 150 : 650;
-        let dir = isUnion ? 1 : -1;
-        
-        // Spawn 6 Infantry
+    // Formasi
+    function initSquads(team, startX, dir) {
         for(let i=0; i<6; i++) {
-            team.infantry.push({
-                x: startX + (i%2) * 20 * -dir,
-                y: 150 + Math.floor(i/2) * 30,
-                hp: 1, speed: 1.5, dir: dir, cd: 0, alive: true
-            });
+            team.infantry.push({ x: startX + (i%2)*30*-dir, y: 120 + Math.floor(i/2)*40, speed: 1.5, cd: 0, alive: true, frame:0 });
         }
-        // Spawn 3 Cavalry
         for(let i=0; i<3; i++) {
-            team.cavalry.push({
-                x: startX + 80 * -dir,
-                y: 180 + i * 40,
-                hp: 2, speed: 3.5, dir: dir, alive: true
-            });
+            team.cavalry.push({ x: startX + 90*-dir, y: 150 + i*50, speed: 3.5, alive: true, frame:0 });
         }
     }
-    
-    initTeam(union, true);
-    initTeam(confed, false);
+    initSquads(union, 120, 1);
+    initSquads(confed, 680, -1);
 
-    // Controls
-    window.addEventListener('keydown', e => {
-        if(e.key === 'w' || e.key === 'ArrowUp') keys.w = true;
-        if(e.key === 's' || e.key === 'ArrowDown') keys.s = true;
-        if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = true;
-        if(e.key === 'd' || e.key === 'ArrowRight') keys.d = true;
-        if(e.key === ' ') keys.space = true;
-        if(e.key === '1') selectSquad('infantry');
-        if(e.key === '2') selectSquad('cavalry');
-        if(e.key === '3') selectSquad('cannon');
-    });
-    window.addEventListener('keyup', e => {
-        if(e.key === 'w' || e.key === 'ArrowUp') keys.w = false;
-        if(e.key === 's' || e.key === 'ArrowDown') keys.s = false;
-        if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = false;
-        if(e.key === 'd' || e.key === 'ArrowRight') keys.d = false;
-        if(e.key === ' ') keys.space = false;
-    });
-
-    // Mobile buttons bindings
-    function bindBtn(id, key) {
-        const btn = document.getElementById(id);
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
-        btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
-        btn.addEventListener('mousedown', () => keys[key] = true);
-        btn.addEventListener('mouseup', () => keys[key] = false);
-        btn.addEventListener('mouseleave', () => keys[key] = false);
-    }
-    bindBtn('btn-up', 'w'); bindBtn('btn-down', 's'); bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd'); bindBtn('btn-fire', 'space');
-
-    window.selectSquad = function(type) { activeSquad = type; };
-
-    function checkWin() {
-        let uAlive = union.cannon.alive || union.infantry.some(u=>u.alive) || union.cavalry.some(u=>u.alive);
-        let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
-        
-        if(!uAlive) { gameOver = true; alert("Kekalahan! Pasukan Union Hancur."); }
-        else if(!cAlive) { gameOver = true; alert("Kemenangan! Pasukan Confederate Hancur."); }
-    }
-
-    function fireCannon(cannon, isUnion) {
-        if(cannon.cd <= 0 && cannon.alive) {
-            projectiles.push({
-                x: isUnion ? cannon.x + 20 : cannon.x - 20,
-                y: cannon.y,
-                vx: isUnion ? 8 : -8,
-                vy: 0,
-                type: 'cannonball',
-                isUnion: isUnion,
-                life: 60 // Jarak tempuh meriam
-            });
-            cannon.cd = 60;
-        }
-    }
-
-    function moveGroup(group, dx, dy, isUnion) {
+    function moveGroup(group, dx, dy) {
         group.forEach(u => {
             if(u.alive) {
-                let nx = u.x + dx * u.speed;
-                let ny = u.y + dy * u.speed;
-                // Batasan layar
-                if(nx > 10 && nx < 790) u.x = nx;
-                if(ny > 10 && ny < 440) u.y = ny;
+                u.x += dx * u.speed; u.y += dy * u.speed;
+                // Boundaries
+                if(u.x < 20) u.x = 20; if(u.x > 780) u.x = 780;
+                if(u.y < 30) u.y = 30; if(u.y > 420) u.y = 420;
+                if(dx !== 0 || dy !== 0) u.frame = (frames % 12 < 6) ? 0 : 1; // Animation
             }
         });
     }
 
+    function fireCannon(cannon, isUnion) {
+        if(cannon.cd <= 0 && cannon.alive) {
+            projectiles.push({ x: isUnion ? cannon.x+20 : cannon.x-20, y: cannon.y-10, vx: isUnion ? 8 : -8, type: 'ball', isUnion: isUnion, life: 60 });
+            cannon.cd = 60;
+        }
+    }
+
     function update() {
         if(gameOver) return;
+        frames++;
 
-        // Player Movement (Union)
         let dx = 0, dy = 0;
         if(keys.w) dy = -1; if(keys.s) dy = 1;
         if(keys.a) dx = -1; if(keys.d) dx = 1;
 
+        // Player Update
         if(activeSquad === 'cannon' && union.cannon.alive) {
             union.cannon.y += dy * union.cannon.speed;
-            if(union.cannon.y < 20) union.cannon.y = 20;
-            if(union.cannon.y > 430) union.cannon.y = 430;
+            if(union.cannon.y < 40) union.cannon.y = 40;
+            if(union.cannon.y > 410) union.cannon.y = 410;
             if(keys.space) fireCannon(union.cannon, true);
         } 
         else if(activeSquad === 'infantry') {
-            moveGroup(union.infantry, dx, dy, true);
+            moveGroup(union.infantry, dx, dy);
             if(keys.space) {
                 union.infantry.forEach(u => {
                     if(u.alive && u.cd <= 0) {
-                        projectiles.push({ x: u.x+10, y: u.y, vx: 6, vy: 0, type: 'bullet', isUnion: true, life: 30 });
-                        u.cd = 40; // Reload time
+                        projectiles.push({ x: u.x+10, y: u.y-10, vx: 7, type: 'bullet', isUnion: true, life: 40 });
+                        u.cd = 40;
                     }
                 });
             }
         }
         else if(activeSquad === 'cavalry') {
-            moveGroup(union.cavalry, dx, dy, true);
-            // Kavaleri otomatis menyerang (melee) saat bersentuhan
+            moveGroup(union.cavalry, dx, dy);
         }
 
-        // Cool downs
         if(union.cannon.cd > 0) union.cannon.cd--;
         union.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
-        
+
+        // Simple AI Update
+        confed.aiTimer--;
+        if(confed.aiTimer <= 0) {
+            let ch = [];
+            if(confed.infantry.some(u=>u.alive)) ch.push('infantry');
+            if(confed.cavalry.some(u=>u.alive)) ch.push('cavalry');
+            if(confed.cannon.alive) ch.push('cannon');
+            if(ch.length > 0) { confed.aiState = ch[Math.floor(Math.random()*ch.length)]; confed.aiTimer = 50 + Math.random()*50; }
+        }
+
+        if(confed.aiState === 'cannon' && confed.cannon.alive) {
+            confed.cannon.y += (Math.random() > 0.5 ? 1 : -1) * confed.cannon.speed;
+            if(Math.random() < 0.05) fireCannon(confed.cannon, false);
+        } else if(confed.aiState === 'infantry') {
+            moveGroup(confed.infantry, -0.8, (Math.random()-0.5));
+            if(Math.random() < 0.05) confed.infantry.forEach(u => {
+                if(u.alive && u.cd <= 0 && Math.random() < 0.3) {
+                    projectiles.push({ x: u.x-10, y: u.y-10, vx: -7, type: 'bullet', isUnion: false, life: 40 }); u.cd = 60;
+                }
+            });
+        } else if(confed.aiState === 'cavalry') {
+            moveGroup(confed.cavalry, -1.2, (Math.random()-0.5)*2);
+        }
         if(confed.cannon.cd > 0) confed.cannon.cd--;
         confed.infantry.forEach(u => { if(u.cd > 0) u.cd--; });
 
-        // Simple AI logic for Confederate
-        confed.aiTimer--;
-        if(confed.aiTimer <= 0) {
-            // Switch AI focus randomly
-            let choices = [];
-            if(confed.infantry.some(u=>u.alive)) choices.push('infantry');
-            if(confed.cavalry.some(u=>u.alive)) choices.push('cavalry');
-            if(confed.cannon.alive) choices.push('cannon');
-            
-            if(choices.length > 0) {
-                confed.aiState = choices[Math.floor(Math.random() * choices.length)];
-                confed.aiTimer = 60 + Math.random() * 60;
-            }
-        }
-
-        // AI Execution
-        if(confed.aiState === 'cannon' && confed.cannon.alive) {
-            // Cannon AI moves up and down randomly, occasionally firing
-            confed.cannon.y += (Math.random() > 0.5 ? 1 : -1) * confed.cannon.speed;
-            if(Math.random() < 0.05) fireCannon(confed.cannon, false);
-        } 
-        else if(confed.aiState === 'infantry') {
-            moveGroup(confed.infantry, -1, (Math.random()-0.5), false); // Move left
-            if(Math.random() < 0.05) {
-                confed.infantry.forEach(u => {
-                    if(u.alive && u.cd <= 0 && Math.random() < 0.3) {
-                        projectiles.push({ x: u.x-10, y: u.y, vx: -6, vy: 0, type: 'bullet', isUnion: false, life: 30 });
-                        u.cd = 60;
-                    }
-                });
-            }
-        } 
-        else if(confed.aiState === 'cavalry') {
-            moveGroup(confed.cavalry, -1, (Math.random()-0.5)*2, false); // Charge left fast
-        }
-
-        // Update Projectiles & Collisions
+        // Physics & Hit Detection
         for(let i=projectiles.length-1; i>=0; i--) {
             let p = projectiles[i];
-            p.x += p.vx; p.y += p.vy; p.life--;
+            p.x += p.vx; p.life--;
 
-            // Cannonball explosion check
-            if(p.type === 'cannonball' && p.life <= 0) {
-                explosions.push({ x: p.x, y: p.y, r: 0, maxR: 40, life: 15 });
-                
-                // AOE Damage
-                let enemyTeam = p.isUnion ? confed : union;
-                enemyTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 40) u.alive = false; });
-                enemyTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 40) { u.hp-=2; if(u.hp<=0) u.alive = false; }});
-                if(enemyTeam.cannon.alive && Math.hypot(enemyTeam.cannon.x-p.x, enemyTeam.cannon.y-p.y) < 40) enemyTeam.cannon.alive = false;
-
+            if(p.type === 'ball' && p.life <= 0) {
+                fx.push({ x: p.x, y: p.y, life: 20 });
+                let eTeam = p.isUnion ? confed : union;
+                eTeam.infantry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 45) u.alive = false; });
+                eTeam.cavalry.forEach(u => { if(u.alive && Math.hypot(u.x-p.x, u.y-p.y) < 45) u.alive = false; });
+                if(eTeam.cannon.alive && Math.hypot(eTeam.cannon.x-p.x, eTeam.cannon.y-p.y) < 45) eTeam.cannon.alive = false;
                 projectiles.splice(i, 1);
                 continue;
             }
 
-            // Bullet collisions
             if(p.type === 'bullet') {
                 let hit = false;
-                let enemyTeam = p.isUnion ? confed : union;
-                
-                enemyTeam.infantry.forEach(u => {
-                    if(!hit && u.alive && Math.abs(u.x-p.x) < 10 && Math.abs(u.y-p.y) < 10) {
-                        u.alive = false; hit = true;
-                    }
-                });
-                enemyTeam.cavalry.forEach(u => {
-                    if(!hit && u.alive && Math.abs(u.x-p.x) < 15 && Math.abs(u.y-p.y) < 15) {
-                        u.hp -= 1; if(u.hp<=0) u.alive = false; hit = true;
-                    }
-                });
-                
+                let eTeam = p.isUnion ? confed : union;
+                eTeam.infantry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<15 && Math.abs(u.y-p.y)<15) { u.alive = false; hit = true; }});
+                eTeam.cavalry.forEach(u => { if(!hit && u.alive && Math.abs(u.x-p.x)<20 && Math.abs(u.y-p.y)<20) { u.alive = false; hit = true; }});
                 if(hit || p.life <= 0) projectiles.splice(i, 1);
             }
         }
 
-        // Update Explosions
-        for(let i=explosions.length-1; i>=0; i--) {
-            explosions[i].r += (explosions[i].maxR - explosions[i].r) * 0.2;
-            explosions[i].life--;
-            if(explosions[i].life <= 0) explosions.splice(i, 1);
-        }
+        for(let i=fx.length-1; i>=0; i--) { fx[i].life--; if(fx[i].life <= 0) fx.splice(i,1); }
 
-        // Cavalry Melee Collisions (Charge)
+        // Melee Clash
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
-            confed.infantry.forEach(ci => {
-                if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 15) ci.alive = false;
-            });
-            if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 20) confed.cannon.alive = false;
-        });
-        confed.cavalry.forEach(cc => {
-            if(!cc.alive) return;
-            union.infantry.forEach(ui => {
-                if(ui.alive && Math.hypot(cc.x-ui.x, cc.y-ui.y) < 15) ui.alive = false;
-            });
-            if(union.cannon.alive && Math.hypot(cc.x-union.cannon.x, cc.y-union.cannon.y) < 20) union.cannon.alive = false;
+            confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 20) ci.alive = false; });
+            confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 20) { ci.alive = false; uc.alive = false; }}); // Clash
         });
 
-        checkWin();
+        // Win Cond
+        let uAlive = union.cannon.alive || union.infantry.some(u=>u.alive) || union.cavalry.some(u=>u.alive);
+        let cAlive = confed.cannon.alive || confed.infantry.some(u=>u.alive) || confed.cavalry.some(u=>u.alive);
+        if(!uAlive) { gameOver = true; alert("Defeat! Union wiped out."); }
+        else if(!cAlive) { gameOver = true; alert("Victory! Confederate defeated."); }
     }
 
-    function draw() {
-        // Draw Environment (Classic North & South Map)
-        ctx.fillStyle = "#55a630"; // Grass
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function render() {
+        ctx.fillStyle = "#6eb949"; ctx.fillRect(0, 0, GAME_W, GAME_H);
         
-        // Canyon/River in the middle
-        ctx.fillStyle = "#3498db";
-        ctx.fillRect(350, 0, 100, canvas.height);
+        // River & Bridges
+        ctx.fillStyle = "#4FC3F7"; ctx.fillRect(350, 0, 100, GAME_H);
+        drawSprite(S.bridge, 400, 120); drawSprite(S.bridge, 400, 320);
 
-        // Bridges
-        ctx.fillStyle = "#8d6e63"; // Brown Wood
-        ctx.fillRect(350, 100, 100, 40);
-        ctx.fillRect(350, 300, 100, 40);
+        // Selection Highlight
+        ctx.fillStyle = "rgba(255, 255, 0, 0.4)";
+        if(activeSquad === 'cannon' && union.cannon.alive) ctx.fillRect(union.cannon.x-30, union.cannon.y-10, 60, 20);
+        else if(activeSquad === 'infantry') union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 18, 8, 0, 0, Math.PI*2); ctx.fill(); }});
+        else if(activeSquad === 'cavalry') union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.ellipse(u.x, u.y, 25, 12, 0, 0, Math.PI*2); ctx.fill(); }});
 
-        // Draw selection highlight for Union
-        ctx.strokeStyle = "rgba(255, 255, 0, 0.5)";
-        ctx.lineWidth = 4;
-        if(activeSquad === 'cannon' && union.cannon.alive) {
-            ctx.strokeRect(union.cannon.x - 25, union.cannon.y - 20, 50, 40);
-        } else if (activeSquad === 'infantry') {
-            union.infantry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.arc(u.x, u.y, 12, 0, Math.PI*2); ctx.stroke(); } });
-        } else if (activeSquad === 'cavalry') {
-            union.cavalry.forEach(u => { if(u.alive) { ctx.beginPath(); ctx.arc(u.x, u.y, 18, 0, Math.PI*2); ctx.stroke(); } });
-        }
+        let renders = [];
+        // Populate Renders
+        if(union.cannon.alive) renders.push({y: union.cannon.y, draw: ()=>drawSprite(S.union.cannon[0], union.cannon.x, union.cannon.y)});
+        if(confed.cannon.alive) renders.push({y: confed.cannon.y, draw: ()=>drawSprite(S.confed.cannon[0], confed.cannon.x, confed.cannon.y, true)});
+        
+        union.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=>drawSprite(S.union.infantry[u.frame||0], u.x, u.y)}); });
+        union.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=>drawSprite(S.union.cavalry[u.frame||0], u.x, u.y)}); });
+        
+        confed.infantry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=>drawSprite(S.confed.infantry[u.frame||0], u.x, u.y, true)}); });
+        confed.cavalry.forEach(u => { if(u.alive) renders.push({y: u.y, draw: ()=>drawSprite(S.confed.cavalry[u.frame||0], u.x, u.y, true)}); });
 
-        // Draw Units Helper
-        function drawUnit(u, color, type) {
-            if(!u.alive) return;
-            ctx.fillStyle = color;
-            if(type === 'cannon') {
-                ctx.fillRect(u.x-15, u.y-10, 30, 20); // Body
-                ctx.fillStyle = "black";
-                ctx.fillRect(color === union.cannon.color ? u.x : u.x-20, u.y-2, 20, 4); // Barrel
-            } else if (type === 'infantry') {
-                ctx.beginPath(); ctx.arc(u.x, u.y, 6, 0, Math.PI*2); ctx.fill(); // Head
-                ctx.fillRect(u.x-4, u.y+6, 8, 8); // Body
-            } else if (type === 'cavalry') {
-                ctx.fillStyle = "#5d4037"; // Horse color
-                ctx.fillRect(u.x-10, u.y-5, 20, 10); // Horse body
-                ctx.fillStyle = color;
-                ctx.beginPath(); ctx.arc(u.x, u.y-5, 5, 0, Math.PI*2); ctx.fill(); // Rider
-            }
-        }
+        renders.sort((a,b) => a.y - b.y);
+        renders.forEach(r => r.draw());
 
-        // Draw Union
-        drawUnit(union.cannon, union.cannon.color, 'cannon');
-        union.infantry.forEach(u => drawUnit(u, '#2980b9', 'infantry'));
-        union.cavalry.forEach(u => drawUnit(u, '#2980b9', 'cavalry'));
-
-        // Draw Confed
-        drawUnit(confed.cannon, confed.cannon.color, 'cannon');
-        confed.infantry.forEach(u => drawUnit(u, '#7f8c8d', 'infantry'));
-        confed.cavalry.forEach(u => drawUnit(u, '#7f8c8d', 'cavalry'));
-
-        // Draw Projectiles
+        // Proj & FX
         projectiles.forEach(p => {
-            ctx.fillStyle = p.type === 'cannonball' ? "black" : "yellow";
-            let size = p.type === 'cannonball' ? 5 : 2;
-            ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = p.type==='ball' ? "black" : "#f1c40f";
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.type==='ball'?6:3, 0, Math.PI*2); ctx.fill();
         });
-
-        // Draw Explosions
-        explosions.forEach(e => {
-            ctx.fillStyle = `rgba(231, 76, 60, ${e.life / 15})`;
-            ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = `rgba(241, 196, 15, ${e.life / 15})`;
-            ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 0.6, 0, Math.PI*2); ctx.fill();
+        fx.forEach(f => {
+            ctx.globalAlpha = f.life / 20;
+            drawSprite(S.boom, f.x, f.y);
+            ctx.globalAlpha = 1.0;
         });
     }
 
-    function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-    }
+    function loop() { update(); render(); requestAnimationFrame(loop); }
     loop();
 </script>
 </body>
