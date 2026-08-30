@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>North & South: Ultimate Mobile Responsive</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    
+    <title>North & South: Ultimate Web App</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
@@ -26,16 +31,17 @@
                 text-align: center; padding: 20px;
             }
             #rotate-msg h1 { font-size: 32px; text-shadow: 2px 2px 0 #000; margin-bottom: 10px; }
-            #rotate-msg p { font-family: sans-serif; font-size: 16px; }
-            #rotate-msg .icon { font-size: 60px; margin-top: 20px; animation: tilt 2s infinite; }
+            #rotate-msg p { font-family: sans-serif; font-size: 16px; margin-bottom: 20px; }
+            #rotate-msg .icon { font-size: 60px; animation: tilt 2s infinite; }
             @keyframes tilt { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
         }
 
-        /* CANVAS FULL SCREEN */
-        canvas {
-            display: block; position: absolute; top: 0; left: 0;
-            width: 100vw; height: 100vh;
+        /* CANVAS & SCALER */
+        #screen-scaler {
+            position: absolute; transform-origin: top left;
+            width: 1280px; height: 720px; background-color: #7bc05b; overflow: hidden;
         }
+        canvas { position: absolute; top: 0; left: 0; width: 1280px; height: 720px; }
 
         /* UI WRAPPER MURNI RESPONSIF */
         #game-ui {
@@ -43,42 +49,50 @@
             pointer-events: none; z-index: 10;
         }
 
+        /* EXTRA CONTROLS (Audio & Fullscreen) */
+        .top-controls {
+            position: absolute; top: 15px; left: 2%; display: flex; gap: 10px; pointer-events: auto; z-index: 50;
+        }
+        .mini-btn {
+            background: linear-gradient(to bottom, #3498db, #2980b9); border: 3px solid #1a252f;
+            border-radius: 50%; width: 45px; height: 45px; color: white; font-size: 20px;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            box-shadow: 0 4px 0 #1a252f, 0 4px 6px rgba(0,0,0,0.5); text-shadow: 1px 1px 0 #000;
+        }
+        .mini-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #1a252f; }
+
         /* HUD ATAS */
         .hud {
-            position: absolute; top: 15px; left: 2%; right: 2%;
-            display: flex; justify-content: space-between; align-items: center;
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 800px; display: flex; justify-content: space-between; align-items: center;
         }
         .badge {
-            background: linear-gradient(to bottom, #ecf0f1, #bdc3c7);
-            padding: 5px 20px; border-radius: 25px; border: 3px solid #2c3e50; color: #2c3e50;
-            box-shadow: 0 4px 0 #2c3e50, 0 6px 10px rgba(0,0,0,0.5);
+            background: linear-gradient(to bottom, #ecf0f1, #bdc3c7); padding: 5px 20px; border-radius: 25px; 
+            border: 3px solid #2c3e50; color: #2c3e50; box-shadow: 0 4px 0 #2c3e50, 0 6px 10px rgba(0,0,0,0.5);
             display: flex; align-items: center; gap: 8px; font-size: 14px;
         }
         .stage-badge {
-            background: linear-gradient(to bottom, #f1c40f, #f39c12); color: white;
-            border-color: #fff; box-shadow: 0 4px 0 #d35400, 0 6px 10px rgba(0,0,0,0.5);
-            text-shadow: 2px 2px 0 #d35400; font-size: 20px; padding: 5px 30px;
+            background: linear-gradient(to bottom, #f1c40f, #f39c12); color: white; border-color: #fff; 
+            box-shadow: 0 4px 0 #d35400, 0 6px 10px rgba(0,0,0,0.5); text-shadow: 2px 2px 0 #d35400; font-size: 20px; padding: 5px 30px;
         }
         .dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #2c3e50; }
 
         /* KONTROL KIRI (D-PAD) */
         .controls-left {
-            position: absolute; bottom: 20px; left: 20px;
-            pointer-events: auto;
+            position: absolute; bottom: 20px; left: 20px; pointer-events: auto;
         }
-        .dpad { display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 8px; }
+        .dpad { display: grid; grid-template-columns: 90px 90px 90px; grid-template-rows: 90px 90px 90px; gap: 12px; }
         .dpad-btn {
-            background: linear-gradient(to bottom, #ffffff, #dcdde1);
-            border: 4px solid #2c3e50; border-radius: 18px; display: flex; justify-content: center; align-items: center;
-            font-size: 24px; color: #2c3e50; cursor: pointer; box-shadow: 0 6px 0 #2c3e50, 0 8px 8px rgba(0,0,0,0.3);
+            background: linear-gradient(to bottom, #ffffff, #dcdde1); border: 5px solid #2c3e50; border-radius: 25px; 
+            display: flex; justify-content: center; align-items: center; font-size: 36px; color: #2c3e50; cursor: pointer; 
+            box-shadow: 0 8px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
         }
-        .dpad-btn:active, .dpad-btn.active { transform: translateY(6px); box-shadow: 0 0 0 #2c3e50; background: #f1c40f; color: #111; }
+        .dpad-btn:active, .dpad-btn.active { transform: translateY(8px); box-shadow: 0 0 0 #2c3e50; background: #f1c40f; color: #111; }
         .empty { visibility: hidden; }
 
         /* KONTROL KANAN (ACTION & FIRE) */
         .controls-right {
-            position: absolute; bottom: 20px; right: 20px;
-            display: flex; align-items: flex-end; gap: 20px; pointer-events: auto;
+            position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 20px; pointer-events: auto;
         }
         .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 160px; }
         .act-btn {
@@ -88,80 +102,72 @@
         }
         .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; border-color: #2c3e50; box-shadow: 0 5px 0 #d35400; text-shadow: 1px 1px 0 #d35400; }
         .act-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #1a252f; }
-        .btn-full { grid-column: span 2; }
+        .btn-full { grid-column: span 2; height: 70px; font-size: 24px;}
         
         #ammo-badge {
-            background: #e74c3c; border: 2px solid white; border-radius: 50%;
-            width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center;
-            font-size: 10px; margin-left: 8px; text-shadow: none; color: white;
+            background: #e74c3c; border: 2px solid white; border-radius: 50%; width: 20px; height: 20px; 
+            display: inline-flex; justify-content: center; align-items: center; font-size: 10px; margin-left: 8px; color: white;
         }
 
         .fire-btn { 
             background: linear-gradient(to bottom, #ff7675, #e74c3c); border: 5px solid #2c3e50; border-radius: 50%; 
-            width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;
-            color: white; font-size: 22px; cursor: pointer; box-shadow: 0 8px 0 #c0392b;
-            text-shadow: 2px 2px 0 #c0392b;
+            width: 140px; height: 140px; display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 40px; cursor: pointer; box-shadow: 0 12px 0 #c0392b, 0 15px 20px rgba(0,0,0,0.5);
+            text-shadow: 3px 3px 0 #c0392b;
         }
-        .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(8px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
+        .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(12px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
 
-        /* LAYAR START UNTUK UNLOCK AUDIO IOS */
+        /* LAYAR START */
         #start-screen {
             position: absolute; z-index: 999; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;
         }
         #start-screen h1 {
-            color: #fff; font-size: 60px; margin-bottom: 30px; text-align: center;
-            text-shadow: 3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 8px 0 #935116;
+            color: #fff; font-size: 80px; margin-bottom: 30px; text-align: center;
+            text-shadow: 4px 4px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 12px 0 #935116;
             transform: rotate(-2deg);
         }
         #btn-start {
-            padding: 15px 40px; background: linear-gradient(to bottom, #f1c40f, #f39c12);
-            color: #fff; border: 5px solid #2c3e50; border-radius: 30px;
-            font-size: 24px; cursor: pointer; box-shadow: 0 8px 0 #d35400;
-            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 #d35400;
-            animation: pulse 1s infinite alternate;
+            padding: 25px 60px; background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; 
+            border: 8px solid #2c3e50; border-radius: 40px; font-size: 40px; cursor: pointer; 
+            box-shadow: 0 12px 0 #d35400, 0 15px 30px rgba(0,0,0,0.5); font-family: 'Fredoka One', cursive; text-shadow: 3px 3px 0 #d35400;
+            animation: pulse 1s infinite alternate; transition: all 0.1s;
         }
+        #btn-start:active { transform: translateY(12px) scale(0.95); box-shadow: 0 0 0 #d35400; }
         @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
 
-        /* MODAL CARTOONY ARCADE */
+        /* MODAL GAME OVER */
         #game-over-overlay {
             display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); z-index: 90;
+            background: rgba(0,0,0,0.7); z-index: 90; pointer-events: auto;
         }
         #game-over-modal {
             display: none; position: absolute; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-            background: linear-gradient(to bottom, #f4d03f, #f39c12); 
-            border: 8px solid #5d4037; border-radius: 30px;
-            padding: 40px 30px 30px; text-align: center; width: 300px; 
-            box-shadow: 0 15px 0 #3e2723;
+            background: linear-gradient(to bottom, #f4d03f, #f39c12); border: 10px solid #5d4037; border-radius: 40px;
+            padding: 50px 40px 40px; text-align: center; width: 450px; box-shadow: 0 20px 0 #3e2723, 0 30px 50px rgba(0,0,0,0.8);
+            pointer-events: auto;
         }
         .modal-show { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
         
         #game-over-modal::before {
-            content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border: 4px dashed rgba(255,255,255,0.4); border-radius: 20px; pointer-events: none;
+            content: ''; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px;
+            border: 6px dashed rgba(255,255,255,0.4); border-radius: 25px; pointer-events: none;
         }
-        
-        #game-over-msg { font-size: 45px; margin: 0 0 10px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
-        
+        #game-over-msg { font-size: 60px; margin: 0 0 10px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
         .msg-sub {
-            background: rgba(255,255,255,0.8); color: #5d4037; font-family: sans-serif;
-            font-weight: 900; font-size: 16px; padding: 8px 20px; border-radius: 15px;
-            display: inline-block; margin-bottom: 25px; text-transform: uppercase;
+            background: rgba(255,255,255,0.8); color: #5d4037; font-family: sans-serif; font-weight: 900; font-size: 22px; 
+            padding: 10px 25px; border-radius: 20px; display: inline-block; margin-bottom: 35px; text-transform: uppercase; box-shadow: inset 0 3px 6px rgba(0,0,0,0.2);
         }
-
         #btn-action {
-            padding: 15px 20px; color: #fff; border-radius: 20px; font-size: 24px; 
-            cursor: pointer; width: 100%; position: relative; z-index: 2;
-            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); border: none;
+            padding: 25px 30px; color: #fff; border-radius: 25px; font-size: 32px; cursor: pointer; width: 100%; position: relative; z-index: 2;
+            font-family: 'Fredoka One', cursive; text-shadow: 3px 3px 0 rgba(0,0,0,0.3); border: none;
         }
-        #btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
+        #btn-action:active { transform: translateY(10px) !important; box-shadow: 0 0 0 transparent !important; }
 
-        /* Media Queries untuk HP Layar Kecil (iPhone dll) */
         @media (max-width: 850px) {
-            .hud { top: 10px; }
+            .hud { width: 70%; left: 60%; }
             .badge { padding: 5px 15px; font-size: 12px; }
             .stage-badge { font-size: 16px; padding: 5px 20px; }
             .controls-left, .controls-right { bottom: 10px; }
@@ -169,97 +175,128 @@
             .dpad-btn { font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #2c3e50; border-radius: 12px; }
             .squad-grid { width: 120px; gap: 6px; }
             .act-btn { height: 35px; font-size: 11px; border-width: 2px; box-shadow: 0 4px 0 #1a252f; border-radius: 8px;}
+            .btn-full { height: 50px; font-size: 16px; }
             .fire-btn { width: 65px; height: 65px; font-size: 16px; border-width: 4px; box-shadow: 0 6px 0 #c0392b; }
             #start-screen h1 { font-size: 40px; }
-            #btn-start { font-size: 20px; padding: 12px 30px; }
+            #btn-start { font-size: 20px; padding: 12px 30px; border-width: 5px; box-shadow: 0 8px 0 #d35400;}
+            .top-controls { left: 10px; top: 10px; gap: 5px;}
+            .mini-btn { width: 35px; height: 35px; font-size: 14px; border-width: 2px; box-shadow: 0 3px 0 #1a252f;}
+            #game-over-modal { width: 280px; padding: 30px 20px; border-width: 6px; }
+            #game-over-msg { font-size: 32px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Peringatan Wajib Landscape -->
     <div id="rotate-msg">
         <h1>PLEASE ROTATE</h1>
-        <p>Hold your phone horizontally to play.</p>
+        <p>Gunakan layar mendatar (Landscape) untuk pengalaman terbaik.<br><br>💡 Tips: Jika kamu menggunakan Safari/Chrome, pilih "Tambahkan ke Layar Utama" (Add to Home Screen) agar game ini jadi Fullscreen otomatis tanpa browser bar!</p>
         <div class="icon">📱</div>
     </div>
 
-    <!-- NATIVE CANVAS FULLSCREEN -->
-    <canvas id="gameCanvas"></canvas>
-    
-    <!-- UI OVERLAY (100% RESPONSIVE) -->
-    <div id="game-ui">
-        <div class="hud">
-            <div class="badge"><div class="dot" style="background:#3498db;"></div> UNION</div>
-            <div class="badge stage-badge" id="stage-hud">STAGE 1</div>
-            <div class="badge">CONFEDERATE <div class="dot" style="background:#e74c3c;"></div></div>
-        </div>
+    <div id="screen-scaler">
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+        
+        <div id="game-ui">
+            <div class="top-controls">
+                <div class="mini-btn" id="btn-audio" onclick="toggleAudio()">🔊</div>
+                <div class="mini-btn" id="btn-fullscreen" onclick="toggleFullScreen()">⛶</div>
+            </div>
 
-        <div class="controls-left">
-            <div class="dpad">
-                <div class="empty"></div><div class="dpad-btn" id="btn-up">W</div><div class="empty"></div>
-                <div class="dpad-btn" id="btn-left">A</div><div class="dpad-btn" id="btn-down">S</div><div class="dpad-btn" id="btn-right">D</div>
+            <div class="hud">
+                <div class="badge"><div class="dot" style="background:#3498db;"></div> UNION</div>
+                <div class="badge stage-badge" id="stage-hud">STAGE 1</div>
+                <div class="badge">CONFEDERATE <div class="dot" style="background:#e74c3c;"></div></div>
+            </div>
+
+            <div class="controls-left">
+                <div class="dpad">
+                    <div class="empty"></div><div class="dpad-btn" id="btn-up">W</div><div class="empty"></div>
+                    <div class="dpad-btn" id="btn-left">A</div><div class="dpad-btn" id="btn-down">S</div><div class="dpad-btn" id="btn-right">D</div>
+                </div>
+            </div>
+            
+            <div class="controls-right">
+                <div class="squad-grid">
+                    <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">INF</div>
+                    <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
+                    <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON <span id="ammo-badge">5</span></div>
+                </div>
+                <div class="fire-btn" id="btn-fire">FIRE</div>
             </div>
         </div>
         
-        <div class="controls-right">
-            <div class="squad-grid">
-                <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">INF</div>
-                <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
-                <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON <span id="ammo-badge">5</span></div>
-            </div>
-            <div class="fire-btn" id="btn-fire">FIRE</div>
+        <div id="start-screen">
+            <h1>NORTH & SOUTH</h1>
+            <button id="btn-start">TAP TO START</button>
         </div>
-    </div>
-        
-    <!-- LAYAR START (WAJIB DITEKAN UNTUK UNLOCK AUDIO IOS) -->
-    <div id="start-screen">
-        <h1>NORTH & SOUTH</h1>
-        <button id="btn-start">TAP TO START</button>
-    </div>
 
-    <!-- MODAL OVERLAY -->
-    <div id="game-over-overlay"></div>
-    <div id="game-over-modal">
-        <h2 id="game-over-msg">CLEARED!</h2>
-        <div class="msg-sub" id="msg-sub">Get ready</div>
-        <button id="btn-action" onclick="handleModalAction()">NEXT STAGE</button>
+        <div id="game-over-overlay"></div>
+        <div id="game-over-modal">
+            <h2 id="game-over-msg">CLEARED!</h2>
+            <div class="msg-sub" id="msg-sub">Get ready</div>
+            <button id="btn-action" onclick="handleModalAction()">NEXT STAGE</button>
+        </div>
     </div>
 
 <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d", { alpha: false });
-    const bgImage = new Image(); bgImage.src = 'image.png'; 
-
-    // --- LOGIKA RESIZE & NATIVE CANVAS SCALING (LETTERBOX) ---
+    // --- RESPONSIVE SCALER ---
     const GAME_W = 1280;
     const GAME_H = 720;
     let scale = 1, offsetX = 0, offsetY = 0;
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        // Hitung rasio untuk men-zoom game agar muat di layar HP apapun
-        scale = Math.min(canvas.width / GAME_W, canvas.height / GAME_H);
-        offsetX = (canvas.width - (GAME_W * scale)) / 2;
-        offsetY = (canvas.height - (GAME_H * scale)) / 2;
+    function applyScale() {
+        const scaler = document.getElementById('screen-scaler');
+        const scaleX = window.innerWidth / 1280;
+        const scaleY = window.innerHeight / 720;
+        scale = Math.min(scaleX, scaleY);
+        
+        scaler.style.transform = `scale(${scale})`;
+        
+        const leftOffset = (window.innerWidth - (1280 * scale)) / 2;
+        const topOffset = (window.innerHeight - (720 * scale)) / 2;
+        scaler.style.left = `${leftOffset}px`;
+        scaler.style.top = `${topOffset}px`;
     }
-    window.addEventListener('resize', resize); resize();
+    window.addEventListener('resize', applyScale);
+    applyScale();
 
-    // --- SFX AUDIO ENGINE (iOS FIX) ---
-    let AudioContext = window.AudioContext || window.webkitAudioContext;
+    // --- FULLSCREEN API ---
+    function toggleFullScreen() {
+        playSound('click');
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    }
+
+    // --- AUDIO ENGINE ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
     let actx = null;
     let gameHasStarted = false;
+    let soundEnabled = true;
+
+    function toggleAudio() {
+        soundEnabled = !soundEnabled;
+        document.getElementById('btn-audio').innerText = soundEnabled ? "🔊" : "🔇";
+        if(soundEnabled) playSound('click');
+    }
 
     function unlockAudio(e) {
         if(e) e.preventDefault();
         if(gameHasStarted) return;
         
-        // Buat AudioContext tepat saat user menyentuh layar
         if(!actx) actx = new AudioContext();
         if (actx.state === 'suspended') actx.resume();
         
-        // Putar suara hening untuk bypass blokir Apple
+        // Coba request fullscreen otomatis saat Start (khusus Android/Desktop)
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(()=>{});
+        }
+
         const osc = actx.createOscillator();
         const gain = actx.createGain();
         gain.gain.value = 0; 
@@ -271,13 +308,12 @@
         gameHasStarted = true;
     }
     
-    // Bind Start Button (Mendukung Touch dan Click)
     const startBtn = document.getElementById('btn-start');
     startBtn.addEventListener('click', unlockAudio);
     startBtn.addEventListener('touchstart', unlockAudio, {passive: false});
 
     function playSound(type) {
-        if (!gameHasStarted || !actx || actx.state === 'suspended') return;
+        if (!gameHasStarted || !actx || actx.state === 'suspended' || !soundEnabled) return;
         let now = actx.currentTime;
         
         if (type === 'click') {
@@ -321,6 +357,10 @@
             });
         }
     }
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const bgImage = new Image(); bgImage.src = 'image.png'; 
 
     // --- BINDING KONTROL ---
     const keys = { w:false, a:false, s:false, d:false, space:false };
@@ -599,7 +639,7 @@
             if(f.life <= 0) fx.splice(i,1); 
         }
 
-        // Melee
+        // Melee Clash
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
             confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 35) { ci.alive = false; fx.push({x: ci.x, y: ci.y, type:'smoke', life: 15}); }});
@@ -625,6 +665,7 @@
         
         if(!uAlive || !cAlive || isDraw) {
             gameOver = true;
+            
             const overlay = document.getElementById('game-over-overlay');
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
@@ -635,7 +676,7 @@
                 playSound('victory'); 
                 isVictory = true; 
                 msg.innerHTML = "DRAW!";
-                msg.style.textShadow = "3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 8px 0 #935116";
+                msg.style.textShadow = "3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 10px 0 #935116";
                 sub.innerText = "Out of Ammo!";
                 btn.innerText = "NEXT STAGE";
                 btn.style.background = "linear-gradient(to bottom, #f1c40f, #f39c12)";
@@ -645,7 +686,7 @@
                 if (isVictory) {
                     playSound('victory');
                     msg.innerHTML = "STAGE<br>CLEARED!";
-                    msg.style.textShadow = "3px 3px 0 #27ae60, -2px -2px 0 #27ae60, 2px -2px 0 #27ae60, -2px 2px 0 #27ae60, 0 8px 0 #145a32";
+                    msg.style.textShadow = "3px 3px 0 #27ae60, -2px -2px 0 #27ae60, 2px -2px 0 #27ae60, -2px 2px 0 #27ae60, 0 10px 0 #145a32";
                     sub.innerText = "Awesome Victory";
                     btn.innerText = "NEXT STAGE";
                     btn.style.background = "linear-gradient(to bottom, #2ecc71, #27ae60)";
@@ -653,7 +694,7 @@
                 } else {
                     playSound('defeat');
                     msg.innerHTML = "DEFEAT!";
-                    msg.style.textShadow = "3px 3px 0 #c0392b, -2px -2px 0 #c0392b, 2px -2px 0 #c0392b, -2px 2px 0 #c0392b, 0 8px 0 #78281f";
+                    msg.style.textShadow = "3px 3px 0 #c0392b, -2px -2px 0 #c0392b, 2px -2px 0 #c0392b, -2px 2px 0 #c0392b, 0 10px 0 #78281f";
                     sub.innerText = "Union Destroyed";
                     btn.innerText = "RETRY STAGE";
                     btn.style.background = "linear-gradient(to bottom, #e74c3c, #c0392b)";
@@ -711,15 +752,12 @@
     }
 
     function render() {
-        // Skala Layar Murni dari Konteks Canvas (Ini yang buat presisi)
         ctx.clearRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = "#050505"; ctx.fillRect(0,0, canvas.width, canvas.height); // Black bars (Letterbox)
         
         ctx.save();
         ctx.translate(offsetX, offsetY);
         ctx.scale(scale, scale);
         
-        // AREA 1280 x 720 (Hanya Menggambar Peta Internal Saja)
         if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720);
         else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
         
@@ -803,7 +841,7 @@
             }
         });
 
-        ctx.restore(); // Akhir blok 1280x720 Native Scaling
+        ctx.restore();
     }
 
     function loop() { update(); render(); requestAnimationFrame(loop); }
