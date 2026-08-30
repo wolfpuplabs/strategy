@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     
-    <title>North & South: Pro Arcade Edition</title>
+    <title>North & South: Tactics Frontier</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
@@ -67,7 +67,7 @@
         .dpad { display: grid; grid-template-columns: 90px 90px 90px; grid-template-rows: 90px 90px 90px; gap: 12px; }
         .dpad-btn {
             background: linear-gradient(to bottom, #ffffff, #dcdde1); border: 5px solid #2c3e50; border-radius: 25px; 
-            display: flex; justify-content: center; align-items: center; color: #2c3e50; cursor: pointer; box-shadow: 0 8px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
+            display: flex; justify-content: center; align-items: center; font-size: 36px; color: #2c3e50; cursor: pointer; box-shadow: 0 8px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
         }
         .dpad-btn:active, .dpad-btn.active { transform: translateY(8px); box-shadow: 0 0 0 #2c3e50; background: #f1c40f; color: #111; }
         .empty { visibility: hidden; }
@@ -102,22 +102,28 @@
         }
         .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(12px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
 
+        /* =========================================
+           LAYAR START BARU (MENGGUNAKAN IMAGE 8)
+           ========================================= */
         #start-screen {
             position: absolute; z-index: 999; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); pointer-events: auto;
+            background: url('image_8.png') no-repeat center center; background-size: cover;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center; 
+            padding-bottom: 50px; pointer-events: auto;
         }
-        #start-screen h1 { color: #fff; font-size: 80px; margin-bottom: 30px; text-align: center; text-shadow: 4px 4px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 12px 0 #935116; transform: rotate(-2deg); }
         #btn-start {
-            padding: 25px 60px; background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; border: 8px solid #2c3e50; border-radius: 40px; font-size: 40px; cursor: pointer; 
-            box-shadow: 0 12px 0 #d35400, 0 15px 30px rgba(0,0,0,0.5); font-family: 'Fredoka One', cursive; text-shadow: 3px 3px 0 #d35400; animation: pulse 1s infinite alternate; transition: all 0.1s;
+            padding: 20px 50px; background: linear-gradient(to bottom, #f1c40f, #d35400); color: #fff; 
+            border: 6px solid #78281f; border-radius: 20px; font-size: 40px; cursor: pointer; 
+            box-shadow: 0 10px 0 #4a1511, 0 15px 30px rgba(0,0,0,0.8), inset 0 5px 15px rgba(255,255,255,0.4); 
+            font-family: 'Fredoka One', cursive; text-shadow: 3px 3px 0 #78281f; 
+            animation: pulse 1.5s infinite alternate; transition: all 0.1s; letter-spacing: 2px;
         }
-        #btn-start:active { transform: translateY(12px) scale(0.95); box-shadow: 0 0 0 #d35400; }
+        #btn-start:active { transform: translateY(10px) scale(0.95); box-shadow: 0 0 0 #4a1511; }
         @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
 
-        /* OVERLAY GLOBAL */
+        /* OVERLAY GLOBAL & MODAL */
         .overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 90; pointer-events: auto; }
         
-        /* MODAL TEMPLATE */
         .modal {
             display: none; position: absolute; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
             background: linear-gradient(to bottom, #f4d03f, #f39c12); border: 8px solid #5d4037; border-radius: 30px;
@@ -160,26 +166,19 @@
             .badge { padding: 5px 15px; font-size: 12px; }
             .stage-badge { font-size: 16px; padding: 5px 20px; }
             .controls-left, .controls-right { bottom: 15px; }
-            
-            /* D-Pad diperbesar */
             .dpad { grid-template-columns: 75px 75px 75px; grid-template-rows: 75px 75px 75px; gap: 15px; }
             .dpad-btn { border-width: 4px; box-shadow: 0 6px 0 #2c3e50; border-radius: 18px; }
             .dpad-btn svg { width: 32px; height: 32px; }
-            
             .squad-grid { width: 170px; gap: 8px; }
             .act-btn { height: 50px; border-width: 3px; box-shadow: 0 5px 0 #1a252f; border-radius: 12px;}
             .act-btn span { font-size: 11px; }
             .act-btn svg { width: 22px; height: 22px; }
             .btn-full { height: 60px; }
             .btn-full span { font-size: 15px; }
-            
             .fire-btn { width: 100px; height: 100px; font-size: 26px; border-width: 5px; box-shadow: 0 8px 0 #c0392b; }
-            
-            #start-screen h1 { font-size: 45px; }
-            #btn-start { font-size: 22px; padding: 15px 35px; border-width: 5px; box-shadow: 0 8px 0 #d35400;}
+            #btn-start { font-size: 28px; padding: 15px 35px; border-width: 5px; box-shadow: 0 8px 0 #4a1511;}
             .top-controls { left: 15px; top: 15px; gap: 12px;}
             .mini-btn { width: 45px; height: 45px; font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #1a252f;}
-            
             #game-over-modal, #confirm-modal { width: 320px; padding: 30px 20px; border-width: 6px; }
             #game-over-msg { font-size: 40px; }
             #confirm-modal h2 { font-size: 32px; }
@@ -194,10 +193,12 @@
         <div class="icon">📱</div>
     </div>
 
+    <!-- WRAPPER 1280x720 -->
     <div id="screen-scaler">
         <canvas id="gameCanvas" width="1280" height="720"></canvas>
         
         <div id="game-ui">
+            <!-- EXTRA CONTROLS -->
             <div class="top-controls">
                 <div class="mini-btn" id="btn-audio" onclick="toggleAudio()">🔊</div>
                 <div class="mini-btn" id="btn-fullscreen" onclick="toggleFullScreen()">⛶</div>
@@ -213,21 +214,14 @@
             </div>
 
             <div class="controls-left">
+                <!-- D-PAD CHEVRON SVG -->
                 <div class="dpad">
                     <div class="empty"></div>
-                    <div class="dpad-btn" id="btn-up">
-                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                    </div>
+                    <div class="dpad-btn" id="btn-up"><svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></div>
                     <div class="empty"></div>
-                    <div class="dpad-btn" id="btn-left">
-                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                    </div>
-                    <div class="dpad-btn" id="btn-down">
-                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
-                    <div class="dpad-btn" id="btn-right">
-                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
+                    <div class="dpad-btn" id="btn-left"><svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+                    <div class="dpad-btn" id="btn-down"><svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+                    <div class="dpad-btn" id="btn-right"><svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
                 </div>
             </div>
             
@@ -251,9 +245,9 @@
             </div>
         </div>
         
+        <!-- LAYAR START DENGAN IMAGE 8 -->
         <div id="start-screen">
-            <h1>NORTH & SOUTH</h1>
-            <button id="btn-start">TAP TO START</button>
+            <button id="btn-start">START CAMPAIGN</button>
         </div>
 
         <div class="overlay" id="overlay"></div>
@@ -287,10 +281,7 @@
     function toggleFullScreen() {
         if(soundEnabled) playSound('click');
         let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if(isIOS) {
-            alert("iOS Safari memblokir fitur tombol Fullscreen.\n\nTips: Tekan tombol 'Share' lalu pilih 'Add to Home Screen'.");
-            return;
-        }
+        if(isIOS) { alert("Tips: Tekan tombol 'Share' lalu pilih 'Add to Home Screen' untuk layar penuh di iOS."); return; }
         try {
             if (!document.fullscreenElement) {
                 if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e=>console.log(e));
@@ -300,11 +291,13 @@
         } catch(e) {}
     }
 
-    // --- AUDIO ENGINE (iOS FIX ULTIMATE) ---
+    // --- AUDIO ENGINE (BGM & SFX) ---
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     let actx = null;
     let audioUnlocked = false;
     let soundEnabled = true;
+    let bgmTimer = null;
+    let bgmStep = 0;
 
     function toggleAudio() {
         soundEnabled = !soundEnabled;
@@ -312,31 +305,60 @@
         if(soundEnabled) playSound('click');
     }
 
-    // Fungsi paksa unlock audio di iOS
+    // Pemicu BGM (Military March)
+    function startBGM() {
+        if(bgmTimer) clearInterval(bgmTimer);
+        bgmStep = 0;
+        // Interval 200ms per ketukan (cepat)
+        bgmTimer = setInterval(() => {
+            if(!soundEnabled || !actx || actx.state === 'suspended' || gameOver || !audioUnlocked) return;
+            let t = actx.currentTime;
+            
+            // Snare Drum (March pattern)
+            if([0, 2, 4, 5, 6, 8, 10, 12, 13, 14].includes(bgmStep)) {
+                let osc = actx.createBufferSource(); let buf = actx.createBuffer(1, actx.sampleRate * 0.1, actx.sampleRate);
+                let dat = buf.getChannelData(0); for(let i=0; i<dat.length; i++) dat[i] = Math.random()*2-1;
+                osc.buffer = buf;
+                let filter = actx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = 1000;
+                let gain = actx.createGain(); gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+                osc.connect(filter); filter.connect(gain); gain.connect(actx.destination); osc.start(t);
+            }
+
+            // Brass Bugle Notes
+            let note = null;
+            if(bgmStep === 0) note = 261.63; // C4
+            if(bgmStep === 4) note = 392.00; // G4
+            if(bgmStep === 8) note = 329.63; // E4
+            if(bgmStep === 12) note = 392.00; // G4
+
+            if(note) {
+                let osc = actx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = note;
+                let filter = actx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.setValueAtTime(400, t); filter.frequency.linearRampToValueAtTime(1500, t+0.1); filter.frequency.linearRampToValueAtTime(400, t+0.3);
+                let gain = actx.createGain(); gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.05, t+0.05); gain.gain.exponentialRampToValueAtTime(0.01, t+0.3);
+                osc.connect(filter); filter.connect(gain); gain.connect(actx.destination); osc.start(t); osc.stop(t+0.3);
+            }
+            bgmStep = (bgmStep + 1) % 16;
+        }, 200);
+    }
+
     function forceUnlockAudio() {
         if(audioUnlocked) return;
         try {
             if(!actx) actx = new AudioCtxClass();
             if(actx.state === 'suspended') actx.resume();
             
-            // Putar audio senyap (silent buffer)
             const buffer = actx.createBuffer(1, 1, 22050);
             const source = actx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(actx.destination);
-            source.start(0);
+            source.buffer = buffer; source.connect(actx.destination); source.start(0);
             
             audioUnlocked = true;
-            console.log("Audio Unlocked Successfully!");
-        } catch(e) { console.log(e); }
+        } catch(e) {}
     }
 
-    // Tempelkan unlocker ke SEMUA interaksi sentuh pertama di layar
     document.addEventListener('touchstart', forceUnlockAudio, {once:true, capture:true});
     document.addEventListener('click', forceUnlockAudio, {once:true, capture:true});
 
-    // Tombol Start menyembunyikan layar awal dan mainkan suara
-    document.getElementById('btn-start').addEventListener('click', (e) => {
+    document.getElementById('btn-start').addEventListener('click', () => {
         forceUnlockAudio();
         document.getElementById('start-screen').style.display = 'none';
         playSound('click');
@@ -344,6 +366,8 @@
         if (!(/iPad|iPhone|iPod/.test(navigator.userAgent)) && document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().catch(()=>{});
         }
+        
+        startBGM(); // Putar BGM saat main
     });
 
     function playSound(type) {
@@ -478,7 +502,6 @@
             obstacles.push({ x: ox, y: oy, type: Math.random() > 0.5 ? 'rock' : 'tree', radius: 25, alive: true });
         }
 
-        // Sebar awan agar tidak menumpuk
         clouds = [];
         let section = 1280 / 4;
         for(let i=0; i<4; i++) {
@@ -526,6 +549,8 @@
 
         initTeam(union, 250, 1, 6, 3); initTeam(confed, 1030, -1, extraInf, extraCav); 
         gameOver = false; keys.space = false;
+        
+        startBGM();
     }
 
     startStage(1);
@@ -617,7 +642,6 @@
         if(!audioUnlocked || gameOver) return;
         frames++;
 
-        // Awan bergerak ke kiri
         clouds.forEach(c => { 
             c.x -= c.speed; 
             if(c.x + (c.r*2) < 0) { c.x = 1280 + c.r; c.y = Math.random()*600; } 
@@ -725,14 +749,12 @@
                         u.alive = false; hit = true; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
                     }
                 });
-                
                 eTeam.cavalry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { 
                         u.hp--; hit = true; fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                         if (u.hp <= 0) { u.alive = false; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10}); }
                     }
                 });
-                
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
                     eTeam.cannon.hp--; hit = true; 
                     if (eTeam.cannon.hp <= 0) {
@@ -849,12 +871,7 @@
     }
 
     function drawShadows() {
-        // Efek Filter Blur khusus bayangan untuk kesan Profesional
-        ctx.save();
-        ctx.filter = 'blur(10px)'; 
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-
-        // Awan
+        ctx.save(); ctx.filter = 'blur(15px)'; ctx.fillStyle = "rgba(0,0,0,0.2)";
         clouds.forEach(c => {
             ctx.beginPath();
             ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
@@ -863,15 +880,10 @@
             ctx.arc(c.x + c.r*1.5, c.y + c.r*0.2, c.r*0.5, 0, Math.PI*2);
             ctx.fill();
         });
-
-        // Bayangan Rintangan
         obstacles.forEach(o => {
-            if(o.alive) {
-                ctx.beginPath(); ctx.ellipse(o.x, o.y + 5, o.radius*1.2, o.radius*0.6, 0, 0, Math.PI*2); ctx.fill();
-            }
+            if(o.alive) { ctx.beginPath(); ctx.ellipse(o.x + 10, o.y + 10, o.radius*1.2, o.radius*0.6, 0, 0, Math.PI*2); ctx.fill(); }
         });
-
-        ctx.restore(); // Matikan blur
+        ctx.restore(); 
     }
 
     function drawObstacle(o) {
@@ -885,11 +897,8 @@
 
     function render() {
         ctx.clearRect(0,0, 1280, 720);
+        if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720); else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
         
-        if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720);
-        else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
-        
-        // Gambar Bayangan Halus
         drawShadows();
 
         ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 3; ctx.lineCap = "round";
