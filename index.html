@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Civil War">
     <meta name="theme-color" content="#000000">
     
-    <title>North & South: Tactics Frontier</title>
+    <title>North & South: Offline Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
@@ -17,7 +19,8 @@
             margin: 0; padding: 0; background-color: #050505;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; touch-action: none; 
-            font-family: 'Fredoka One', cursive, sans-serif;
+            /* Fallback Font jika Offline */
+            font-family: 'Fredoka One', Impact, 'Arial Black', sans-serif;
             user-select: none; -webkit-user-select: none;
         }
 
@@ -102,9 +105,7 @@
         }
         .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(12px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
 
-        /* =========================================
-           LAYAR START BARU (MENGGUNAKAN IMAGE 8)
-           ========================================= */
+        /* LAYAR START DENGAN IMAGE 8 */
         #start-screen {
             position: absolute; z-index: 999; top: 0; left: 0; right: 0; bottom: 0;
             background: url('image_8.png') no-repeat center center; background-size: cover;
@@ -115,7 +116,7 @@
             padding: 20px 50px; background: linear-gradient(to bottom, #f1c40f, #d35400); color: #fff; 
             border: 6px solid #78281f; border-radius: 20px; font-size: 40px; cursor: pointer; 
             box-shadow: 0 10px 0 #4a1511, 0 15px 30px rgba(0,0,0,0.8), inset 0 5px 15px rgba(255,255,255,0.4); 
-            font-family: 'Fredoka One', cursive; text-shadow: 3px 3px 0 #78281f; 
+            font-family: 'Fredoka One', Impact, sans-serif; text-shadow: 3px 3px 0 #78281f; 
             animation: pulse 1.5s infinite alternate; transition: all 0.1s; letter-spacing: 2px;
         }
         #btn-start:active { transform: translateY(10px) scale(0.95); box-shadow: 0 0 0 #4a1511; }
@@ -144,7 +145,7 @@
         }
         .btn-action {
             padding: 20px 25px; color: #fff; border-radius: 20px; font-size: 26px; cursor: pointer; width: 100%; position: relative; z-index: 2;
-            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); border: none; background: linear-gradient(to bottom, #2ecc71, #27ae60); box-shadow: 0 8px 0 #145a32;
+            font-family: 'Fredoka One', Impact, sans-serif; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); border: none; background: linear-gradient(to bottom, #2ecc71, #27ae60); box-shadow: 0 8px 0 #145a32;
         }
         .btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
 
@@ -155,7 +156,7 @@
         .confirm-btns { display: flex; gap: 15px; justify-content: center; position: relative; z-index: 2; }
         .btn-half {
             flex: 1; padding: 15px; font-size: 22px; border-radius: 15px; border: none; cursor: pointer;
-            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); color: white;
+            font-family: 'Fredoka One', Impact, sans-serif; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); color: white;
         }
         .btn-yes { background: linear-gradient(to bottom, #34495e, #2c3e50); box-shadow: 0 6px 0 #1a252f; }
         .btn-no { background: linear-gradient(to bottom, #f1c40f, #f39c12); box-shadow: 0 6px 0 #d35400; }
@@ -193,12 +194,10 @@
         <div class="icon">📱</div>
     </div>
 
-    <!-- WRAPPER 1280x720 -->
     <div id="screen-scaler">
         <canvas id="gameCanvas" width="1280" height="720"></canvas>
         
         <div id="game-ui">
-            <!-- EXTRA CONTROLS -->
             <div class="top-controls">
                 <div class="mini-btn" id="btn-audio" onclick="toggleAudio()">🔊</div>
                 <div class="mini-btn" id="btn-fullscreen" onclick="toggleFullScreen()">⛶</div>
@@ -214,7 +213,6 @@
             </div>
 
             <div class="controls-left">
-                <!-- D-PAD CHEVRON SVG -->
                 <div class="dpad">
                     <div class="empty"></div>
                     <div class="dpad-btn" id="btn-up"><svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></div>
@@ -245,7 +243,6 @@
             </div>
         </div>
         
-        <!-- LAYAR START DENGAN IMAGE 8 -->
         <div id="start-screen">
             <button id="btn-start">START CAMPAIGN</button>
         </div>
@@ -269,6 +266,15 @@
     </div>
 
 <script>
+    // --- SERVICE WORKER (OFFLINE MODE) ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('Game Ready for Offline Mode in Airplane!');
+            }).catch(err => console.log('Offline setup skipped.'));
+        });
+    }
+
     // --- FLEX SCALER ---
     function applyScale() {
         const scaler = document.getElementById('screen-scaler');
@@ -281,7 +287,7 @@
     function toggleFullScreen() {
         if(soundEnabled) playSound('click');
         let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if(isIOS) { alert("Tips: Tekan tombol 'Share' lalu pilih 'Add to Home Screen' untuk layar penuh di iOS."); return; }
+        if(isIOS) { alert("Tips: Tekan tombol 'Share' lalu pilih 'Add to Home Screen' untuk main Offline & Layar Penuh di pesawat."); return; }
         try {
             if (!document.fullscreenElement) {
                 if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e=>console.log(e));
@@ -291,7 +297,7 @@
         } catch(e) {}
     }
 
-    // --- AUDIO ENGINE (BGM & SFX) ---
+    // --- AUDIO ENGINE ---
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     let actx = null;
     let audioUnlocked = false;
@@ -305,16 +311,13 @@
         if(soundEnabled) playSound('click');
     }
 
-    // Pemicu BGM (Military March)
     function startBGM() {
         if(bgmTimer) clearInterval(bgmTimer);
         bgmStep = 0;
-        // Interval 200ms per ketukan (cepat)
         bgmTimer = setInterval(() => {
             if(!soundEnabled || !actx || actx.state === 'suspended' || gameOver || !audioUnlocked) return;
             let t = actx.currentTime;
             
-            // Snare Drum (March pattern)
             if([0, 2, 4, 5, 6, 8, 10, 12, 13, 14].includes(bgmStep)) {
                 let osc = actx.createBufferSource(); let buf = actx.createBuffer(1, actx.sampleRate * 0.1, actx.sampleRate);
                 let dat = buf.getChannelData(0); for(let i=0; i<dat.length; i++) dat[i] = Math.random()*2-1;
@@ -324,12 +327,11 @@
                 osc.connect(filter); filter.connect(gain); gain.connect(actx.destination); osc.start(t);
             }
 
-            // Brass Bugle Notes
             let note = null;
-            if(bgmStep === 0) note = 261.63; // C4
-            if(bgmStep === 4) note = 392.00; // G4
-            if(bgmStep === 8) note = 329.63; // E4
-            if(bgmStep === 12) note = 392.00; // G4
+            if(bgmStep === 0) note = 261.63; 
+            if(bgmStep === 4) note = 392.00; 
+            if(bgmStep === 8) note = 329.63; 
+            if(bgmStep === 12) note = 392.00; 
 
             if(note) {
                 let osc = actx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = note;
@@ -346,11 +348,9 @@
         try {
             if(!actx) actx = new AudioCtxClass();
             if(actx.state === 'suspended') actx.resume();
-            
             const buffer = actx.createBuffer(1, 1, 22050);
             const source = actx.createBufferSource();
             source.buffer = buffer; source.connect(actx.destination); source.start(0);
-            
             audioUnlocked = true;
         } catch(e) {}
     }
@@ -362,12 +362,10 @@
         forceUnlockAudio();
         document.getElementById('start-screen').style.display = 'none';
         playSound('click');
-        
         if (!(/iPad|iPhone|iPod/.test(navigator.userAgent)) && document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().catch(()=>{});
         }
-        
-        startBGM(); // Putar BGM saat main
+        startBGM(); 
     });
 
     function playSound(type) {
@@ -749,12 +747,14 @@
                         u.alive = false; hit = true; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
                     }
                 });
+                
                 eTeam.cavalry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { 
                         u.hp--; hit = true; fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                         if (u.hp <= 0) { u.alive = false; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10}); }
                     }
                 });
+                
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
                     eTeam.cannon.hp--; hit = true; 
                     if (eTeam.cannon.hp <= 0) {
