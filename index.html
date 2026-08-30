@@ -2,120 +2,139 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>North & South: Arcade Edition (Fixed SFX & Armor)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>North & South: Ultimate Mobile Responsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
         body {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            margin: 0; padding: 0; background-color: #1a1a1a;
+            margin: 0; padding: 0; background-color: #050505;
             overflow: hidden; touch-action: none; 
             font-family: 'Fredoka One', cursive, sans-serif;
             user-select: none; -webkit-user-select: none;
         }
-        
-        #game-wrapper {
-            position: absolute; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            background: #111;
-        }
-        
-        canvas {
-            width: 100%; height: 100%; object-fit: contain;
-            background-color: #7bc05b;
+
+        /* PERINGATAN LANDSCAPE */
+        #rotate-msg { display: none; }
+        @media (orientation: portrait) {
+            #game-ui { display: none !important; }
+            #start-screen { display: none !important; }
+            #rotate-msg { 
+                display: flex; flex-direction: column; align-items: center; justify-content: center; 
+                position: fixed; top:0; left:0; right:0; bottom:0; background: #2c3e50; color: white; z-index: 9999;
+                text-align: center; padding: 20px;
+            }
+            #rotate-msg h1 { font-size: 32px; text-shadow: 2px 2px 0 #000; margin-bottom: 10px; }
+            #rotate-msg p { font-family: sans-serif; font-size: 16px; }
+            #rotate-msg .icon { font-size: 60px; margin-top: 20px; animation: tilt 2s infinite; }
+            @keyframes tilt { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
         }
 
-        /* LAYAR START (UNTUK UNLOCK AUDIO iOS) */
+        /* CANVAS FULL SCREEN */
+        canvas {
+            display: block; position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+        }
+
+        /* UI WRAPPER MURNI RESPONSIF */
+        #game-ui {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 10;
+        }
+
+        /* HUD ATAS */
+        .hud {
+            position: absolute; top: 15px; left: 2%; right: 2%;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .badge {
+            background: linear-gradient(to bottom, #ecf0f1, #bdc3c7);
+            padding: 5px 20px; border-radius: 25px; border: 3px solid #2c3e50; color: #2c3e50;
+            box-shadow: 0 4px 0 #2c3e50, 0 6px 10px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 8px; font-size: 14px;
+        }
+        .stage-badge {
+            background: linear-gradient(to bottom, #f1c40f, #f39c12); color: white;
+            border-color: #fff; box-shadow: 0 4px 0 #d35400, 0 6px 10px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 0 #d35400; font-size: 20px; padding: 5px 30px;
+        }
+        .dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #2c3e50; }
+
+        /* KONTROL KIRI (D-PAD) */
+        .controls-left {
+            position: absolute; bottom: 20px; left: 20px;
+            pointer-events: auto;
+        }
+        .dpad { display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 8px; }
+        .dpad-btn {
+            background: linear-gradient(to bottom, #ffffff, #dcdde1);
+            border: 4px solid #2c3e50; border-radius: 18px; display: flex; justify-content: center; align-items: center;
+            font-size: 24px; color: #2c3e50; cursor: pointer; box-shadow: 0 6px 0 #2c3e50, 0 8px 8px rgba(0,0,0,0.3);
+        }
+        .dpad-btn:active, .dpad-btn.active { transform: translateY(6px); box-shadow: 0 0 0 #2c3e50; background: #f1c40f; color: #111; }
+        .empty { visibility: hidden; }
+
+        /* KONTROL KANAN (ACTION & FIRE) */
+        .controls-right {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; align-items: flex-end; gap: 20px; pointer-events: auto;
+        }
+        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 160px; }
+        .act-btn {
+            background: linear-gradient(to bottom, #3498db, #2980b9); border: 3px solid #1a252f; border-radius: 12px; color: white;
+            font-size: 13px; display: flex; justify-content: center; align-items: center; box-shadow: 0 5px 0 #1a252f;
+            height: 40px; cursor: pointer; text-shadow: 1px 1px 0 #000; position: relative;
+        }
+        .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; border-color: #2c3e50; box-shadow: 0 5px 0 #d35400; text-shadow: 1px 1px 0 #d35400; }
+        .act-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #1a252f; }
+        .btn-full { grid-column: span 2; }
+        
+        #ammo-badge {
+            background: #e74c3c; border: 2px solid white; border-radius: 50%;
+            width: 20px; height: 20px; display: inline-flex; justify-content: center; align-items: center;
+            font-size: 10px; margin-left: 8px; text-shadow: none; color: white;
+        }
+
+        .fire-btn { 
+            background: linear-gradient(to bottom, #ff7675, #e74c3c); border: 5px solid #2c3e50; border-radius: 50%; 
+            width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 22px; cursor: pointer; box-shadow: 0 8px 0 #c0392b;
+            text-shadow: 2px 2px 0 #c0392b;
+        }
+        .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(8px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
+
+        /* LAYAR START UNTUK UNLOCK AUDIO IOS */
         #start-screen {
             position: absolute; z-index: 999; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column;
             justify-content: center; align-items: center; backdrop-filter: blur(5px);
         }
         #start-screen h1 {
-            color: #fff; font-size: 60px; margin-bottom: 20px; text-align: center;
-            text-shadow: 4px 4px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 10px 0 #935116;
+            color: #fff; font-size: 60px; margin-bottom: 30px; text-align: center;
+            text-shadow: 3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 8px 0 #935116;
             transform: rotate(-2deg);
         }
         #btn-start {
-            padding: 20px 40px; background: linear-gradient(to bottom, #f1c40f, #f39c12);
-            color: #fff; border: 6px solid #2c3e50; border-radius: 25px;
-            font-size: 30px; cursor: pointer; box-shadow: 0 10px 0 #d35400, 0 15px 20px rgba(0,0,0,0.5);
+            padding: 15px 40px; background: linear-gradient(to bottom, #f1c40f, #f39c12);
+            color: #fff; border: 5px solid #2c3e50; border-radius: 30px;
+            font-size: 24px; cursor: pointer; box-shadow: 0 8px 0 #d35400;
             font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 #d35400;
             animation: pulse 1s infinite alternate;
         }
-        #btn-start:active { transform: translateY(10px); box-shadow: 0 0 0 #d35400; }
         @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        
-        /* UI Panel Atas */
-        .hud {
-            position: absolute; top: 15px; width: 95%; max-width: 900px;
-            display: flex; justify-content: space-between; align-items: center; z-index: 10; pointer-events: none;
-        }
-        .badge {
-            background: linear-gradient(to bottom, #ecf0f1, #bdc3c7);
-            padding: 8px 25px; border-radius: 25px; border: 4px solid #2c3e50; color: #2c3e50;
-            box-shadow: 0 6px 0 #2c3e50, 0 10px 15px rgba(0,0,0,0.5);
-            display: flex; align-items: center; gap: 10px; font-size: 16px;
-        }
-        .stage-badge {
-            background: linear-gradient(to bottom, #f1c40f, #f39c12); color: white;
-            border-color: #fff; box-shadow: 0 6px 0 #d35400, 0 10px 15px rgba(0,0,0,0.5);
-            text-shadow: 2px 2px 0 #d35400; font-size: 24px; padding: 5px 25px;
-        }
-        .dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #2c3e50; }
-
-        /* KONTROL BAWAH */
-        #controls {
-            position: absolute; bottom: 30px; width: 95%; max-width: 950px;
-            display: flex; justify-content: space-between; align-items: flex-end; z-index: 20;
-        }
-        
-        .dpad { display: grid; grid-template-columns: 65px 65px 65px; grid-template-rows: 65px 65px 65px; gap: 8px; }
-        .dpad-btn {
-            background: linear-gradient(to bottom, #ffffff, #dcdde1);
-            border: 4px solid #2c3e50; border-radius: 20px; display: flex; justify-content: center; align-items: center;
-            font-size: 28px; color: #2c3e50; cursor: pointer; box-shadow: 0 6px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
-        }
-        .dpad-btn:active, .dpad-btn.active { transform: translateY(6px); box-shadow: 0 0 0 #2c3e50, 0 4px 5px rgba(0,0,0,0.3); background: #f1c40f; }
-        .empty { visibility: hidden; }
-
-        .actions { display: flex; align-items: flex-end; gap: 20px; }
-        .squad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 180px; }
-        .act-btn {
-            background: linear-gradient(to bottom, #3498db, #2980b9); border: 4px solid #1a252f; border-radius: 15px; color: white;
-            font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 0 #1a252f, 0 8px 10px rgba(0,0,0,0.4);
-            height: 45px; cursor: pointer; text-shadow: 1px 1px 0 #000; position: relative;
-        }
-        .act-btn.selected { background: linear-gradient(to bottom, #f1c40f, #f39c12); color: #fff; border-color: #2c3e50; box-shadow: 0 6px 0 #d35400; text-shadow: 1px 1px 0 #d35400; }
-        .act-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #1a252f; }
-        .btn-full { grid-column: span 2; }
-        
-        #ammo-badge {
-            background: #e74c3c; border: 2px solid white; border-radius: 50%;
-            width: 22px; height: 22px; display: inline-flex; justify-content: center; align-items: center;
-            font-size: 12px; margin-left: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); text-shadow: none; color: white;
-        }
-
-        .fire-btn { 
-            background: linear-gradient(to bottom, #ff7675, #e74c3c); border: 5px solid #2c3e50; border-radius: 50%; 
-            width: 90px; height: 90px; display: flex; justify-content: center; align-items: center;
-            color: white; font-size: 26px; cursor: pointer; box-shadow: 0 8px 0 #c0392b, 0 12px 15px rgba(0,0,0,0.5);
-            text-shadow: 2px 2px 0 #c0392b;
-        }
-        .fire-btn:active, .fire-btn.active { background: #c0392b; transform: translateY(8px); box-shadow: 0 0 0 #c0392b; border-color: #f1c40f; }
 
         /* MODAL CARTOONY ARCADE */
         #game-over-overlay {
             display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 90;
+            background: rgba(0,0,0,0.7); z-index: 90;
         }
         #game-over-modal {
             display: none; position: absolute; z-index: 100; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
             background: linear-gradient(to bottom, #f4d03f, #f39c12); 
-            border: 8px solid #5d4037; border-radius: 35px;
-            padding: 40px 30px 30px; text-align: center; width: 320px; 
-            box-shadow: 0 15px 0 #3e2723, 0 25px 40px rgba(0,0,0,0.8);
+            border: 8px solid #5d4037; border-radius: 30px;
+            padding: 40px 30px 30px; text-align: center; width: 300px; 
+            box-shadow: 0 15px 0 #3e2723;
         }
         .modal-show { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
@@ -125,89 +144,140 @@
             border: 4px dashed rgba(255,255,255,0.4); border-radius: 20px; pointer-events: none;
         }
         
-        #game-over-msg { font-size: 42px; margin: 0 0 5px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
+        #game-over-msg { font-size: 45px; margin: 0 0 10px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
         
         .msg-sub {
             background: rgba(255,255,255,0.8); color: #5d4037; font-family: sans-serif;
-            font-weight: 900; font-size: 16px; padding: 5px 15px; border-radius: 15px;
-            display: inline-block; margin-bottom: 25px; text-transform: uppercase; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: 900; font-size: 16px; padding: 8px 20px; border-radius: 15px;
+            display: inline-block; margin-bottom: 25px; text-transform: uppercase;
         }
 
         #btn-action {
-            padding: 18px 20px; color: #fff; border-radius: 20px; font-size: 22px; 
+            padding: 15px 20px; color: #fff; border-radius: 20px; font-size: 24px; 
             cursor: pointer; width: 100%; position: relative; z-index: 2;
-            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+            font-family: 'Fredoka One', cursive; text-shadow: 2px 2px 0 rgba(0,0,0,0.3); border: none;
         }
         #btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
 
-        @media (max-width: 750px) {
-            .dpad { grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px 55px; }
-            .dpad-btn { font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #2c3e50; }
-            .squad-grid { width: 130px; }
-            .act-btn { height: 35px; font-size: 11px; box-shadow: 0 4px 0 #1a252f; }
-            .fire-btn { width: 75px; height: 75px; font-size: 18px; border-width: 4px; box-shadow: 0 6px 0 #c0392b; }
-            .badge { padding: 5px 15px; font-size: 11px; }
-            .stage-badge { font-size: 16px; padding: 5px 15px; }
+        /* Media Queries untuk HP Layar Kecil (iPhone dll) */
+        @media (max-width: 850px) {
+            .hud { top: 10px; }
+            .badge { padding: 5px 15px; font-size: 12px; }
+            .stage-badge { font-size: 16px; padding: 5px 20px; }
+            .controls-left, .controls-right { bottom: 10px; }
+            .dpad { grid-template-columns: 45px 45px 45px; grid-template-rows: 45px 45px 45px; gap: 5px; }
+            .dpad-btn { font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #2c3e50; border-radius: 12px; }
+            .squad-grid { width: 120px; gap: 6px; }
+            .act-btn { height: 35px; font-size: 11px; border-width: 2px; box-shadow: 0 4px 0 #1a252f; border-radius: 8px;}
+            .fire-btn { width: 65px; height: 65px; font-size: 16px; border-width: 4px; box-shadow: 0 6px 0 #c0392b; }
             #start-screen h1 { font-size: 40px; }
+            #btn-start { font-size: 20px; padding: 12px 30px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="game-wrapper">
-        <canvas id="gameCanvas" width="1280" height="720"></canvas>
-        
+    <!-- Peringatan Wajib Landscape -->
+    <div id="rotate-msg">
+        <h1>PLEASE ROTATE</h1>
+        <p>Hold your phone horizontally to play.</p>
+        <div class="icon">📱</div>
+    </div>
+
+    <!-- NATIVE CANVAS FULLSCREEN -->
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- UI OVERLAY (100% RESPONSIVE) -->
+    <div id="game-ui">
         <div class="hud">
             <div class="badge"><div class="dot" style="background:#3498db;"></div> UNION</div>
             <div class="badge stage-badge" id="stage-hud">STAGE 1</div>
             <div class="badge">CONFEDERATE <div class="dot" style="background:#e74c3c;"></div></div>
         </div>
 
-        <div id="controls">
+        <div class="controls-left">
             <div class="dpad">
                 <div class="empty"></div><div class="dpad-btn" id="btn-up">W</div><div class="empty"></div>
                 <div class="dpad-btn" id="btn-left">A</div><div class="dpad-btn" id="btn-down">S</div><div class="dpad-btn" id="btn-right">D</div>
             </div>
-            
-            <div class="actions">
-                <div class="squad-grid">
-                    <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">INF</div>
-                    <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
-                    <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON <span id="ammo-badge">5</span></div>
-                </div>
-                <div class="fire-btn" id="btn-fire">FIRE</div>
-            </div>
         </div>
         
-        <div id="start-screen">
-            <h1>NORTH & SOUTH</h1>
-            <button id="btn-start" onclick="unlockGame()">TAP TO START</button>
+        <div class="controls-right">
+            <div class="squad-grid">
+                <div class="act-btn selected" id="btn-inf" onclick="switchSquad('infantry')">INF</div>
+                <div class="act-btn" id="btn-cav" onclick="switchSquad('cavalry')">CAV</div>
+                <div class="act-btn btn-full" id="btn-can" onclick="switchSquad('cannon')">CANNON <span id="ammo-badge">5</span></div>
+            </div>
+            <div class="fire-btn" id="btn-fire">FIRE</div>
         </div>
+    </div>
+        
+    <!-- LAYAR START (WAJIB DITEKAN UNTUK UNLOCK AUDIO IOS) -->
+    <div id="start-screen">
+        <h1>NORTH & SOUTH</h1>
+        <button id="btn-start">TAP TO START</button>
+    </div>
 
-        <div id="game-over-overlay"></div>
-        <div id="game-over-modal">
-            <h2 id="game-over-msg">CLEARED!</h2>
-            <div class="msg-sub" id="msg-sub">Get ready</div>
-            <button id="btn-action" onclick="handleModalAction()">NEXT STAGE</button>
-        </div>
+    <!-- MODAL OVERLAY -->
+    <div id="game-over-overlay"></div>
+    <div id="game-over-modal">
+        <h2 id="game-over-msg">CLEARED!</h2>
+        <div class="msg-sub" id="msg-sub">Get ready</div>
+        <button id="btn-action" onclick="handleModalAction()">NEXT STAGE</button>
     </div>
 
 <script>
-    // --- ADVANCED SFX AUDIO ENGINE ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const actx = new AudioContext();
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const bgImage = new Image(); bgImage.src = 'image.png'; 
+
+    // --- LOGIKA RESIZE & NATIVE CANVAS SCALING (LETTERBOX) ---
+    const GAME_W = 1280;
+    const GAME_H = 720;
+    let scale = 1, offsetX = 0, offsetY = 0;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Hitung rasio untuk men-zoom game agar muat di layar HP apapun
+        scale = Math.min(canvas.width / GAME_W, canvas.height / GAME_H);
+        offsetX = (canvas.width - (GAME_W * scale)) / 2;
+        offsetY = (canvas.height - (GAME_H * scale)) / 2;
+    }
+    window.addEventListener('resize', resize); resize();
+
+    // --- SFX AUDIO ENGINE (iOS FIX) ---
+    let AudioContext = window.AudioContext || window.webkitAudioContext;
+    let actx = null;
     let gameHasStarted = false;
 
-    // Fungsi untuk membuka sistem audio di iOS (Wajib ditekan oleh user)
-    window.unlockGame = function() {
+    function unlockAudio(e) {
+        if(e) e.preventDefault();
+        if(gameHasStarted) return;
+        
+        // Buat AudioContext tepat saat user menyentuh layar
+        if(!actx) actx = new AudioContext();
         if (actx.state === 'suspended') actx.resume();
+        
+        // Putar suara hening untuk bypass blokir Apple
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        gain.gain.value = 0; 
+        osc.connect(gain); gain.connect(actx.destination);
+        osc.start(0); osc.stop(actx.currentTime + 0.1);
+        
         playSound('click');
         document.getElementById('start-screen').style.display = 'none';
         gameHasStarted = true;
     }
+    
+    // Bind Start Button (Mendukung Touch dan Click)
+    const startBtn = document.getElementById('btn-start');
+    startBtn.addEventListener('click', unlockAudio);
+    startBtn.addEventListener('touchstart', unlockAudio, {passive: false});
 
     function playSound(type) {
-        if (!gameHasStarted || actx.state === 'suspended') return;
+        if (!gameHasStarted || !actx || actx.state === 'suspended') return;
         let now = actx.currentTime;
         
         if (type === 'click') {
@@ -220,7 +290,7 @@
             o.type = 'square'; o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(750, now + 0.1);
             g.gain.setValueAtTime(0.2, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + 0.1);
-        } else if (type === 'hitRock') { // Suara peluru mentok di armor meriam/batu
+        } else if (type === 'hitRock') { 
             let o = actx.createOscillator(); let g = actx.createGain();
             o.type = 'triangle'; o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(300, now + 0.1);
             g.gain.setValueAtTime(0.4, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
@@ -252,19 +322,9 @@
         }
     }
 
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d", { alpha: false });
-    const bgImage = new Image(); bgImage.src = 'image.png'; 
-
-    function resize() {
-        let scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
-        canvas.style.transform = `scale(${scale})`;
-    }
-    window.addEventListener('resize', resize); resize();
-
-    // Input Control
+    // --- BINDING KONTROL ---
     const keys = { w:false, a:false, s:false, d:false, space:false };
-    function bindBtn(id, key) {
+    function bindCtrl(id, key) {
         const el = document.getElementById(id);
         if(!el) return;
         const press = (e) => { 
@@ -275,7 +335,7 @@
         el.addEventListener('touchstart', press, {passive: false}); el.addEventListener('touchend', release, {passive: false});
         el.addEventListener('mousedown', press); el.addEventListener('mouseup', release); el.addEventListener('mouseleave', release);
     }
-    bindBtn('btn-up', 'w'); bindBtn('btn-down', 's'); bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd'); bindBtn('btn-fire', 'space');
+    bindCtrl('btn-up', 'w'); bindCtrl('btn-down', 's'); bindCtrl('btn-left', 'a'); bindCtrl('btn-right', 'd'); bindCtrl('btn-fire', 'space');
 
     window.addEventListener('keydown', (e) => {
         if(e.key === 'w' || e.key === 'ArrowUp') keys.w = true;
@@ -318,15 +378,12 @@
     let gameOver = false, frames = 0;
     let union, confed, projectiles, fx, obstacles;
 
-    // HP & Armor Stats Update
     function initTeam(team, startX, dir, infCount, cavCount) {
         let jitterY = (Math.random() - 0.5) * 50; 
         for(let i=0; i<infCount; i++) {
-            // Infantry HP 1
             team.infantry.push({ x: startX + (i%2)*40*-dir + (Math.random()*10), y: 150 + jitterY + Math.floor(i/2)*70 + (Math.random()*10), speed: 1.5, cd: 0, alive: true, team: dir===1?0:1, frame: Math.random()*10, hp: 1, maxHp: 1 });
         }
         for(let i=0; i<cavCount; i++) {
-            // Cavalry HP 2
             team.cavalry.push({ x: startX + 110*-dir + (Math.random()*10), y: 180 + jitterY + i*80 + (Math.random()*10), speed: 2.8, alive: true, team: dir===1?0:1, frame: Math.random()*10, hp: 2, maxHp: 2 });
         }
     }
@@ -355,7 +412,6 @@
         let extraInf = Math.min(10, 6 + Math.floor(currentStage/2));
         let extraCav = Math.min(6, 3 + Math.floor(currentStage/3));
 
-        // Cannon HP 5
         union = { color: '#2980b9', pants: '#1c5982', cannon: { x: 100, y: 350, alive: true, cd: 0, speed: 1.8, frame:0, ammo: 5, hp: 5, maxHp: 5 }, infantry: [], cavalry: [] };
         confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: enemySpd, frame:0, ammo: 5, hp: 5, maxHp: 5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
         
@@ -483,7 +539,6 @@
             let hitObs = null;
             for(let o of obstacles) { if(o.alive && Math.hypot(o.x - p.x, o.y - p.y) < o.radius + 10) { hitObs = o; break; } }
 
-            // 1. Bola Meriam (AOE & Menghancurkan Benda)
             if(p.type === 'ball') {
                 if(frames%3===0) fx.push({x: p.x, y: p.y, type:'smoke', life: 10});
 
@@ -506,39 +561,29 @@
                     projectiles.splice(i, 1); continue;
                 }
             }
-            // 2. Peluru Senapan (Sistem Armor Berjalan)
             else if(p.type === 'bullet') {
                 if(hitObs) { fx.push({x: p.x, y: p.y, type: 'smoke', life: 5}); projectiles.splice(i, 1); continue; }
                 
                 let hit = false;
-                
-                // Hit Infantry (1 hit KO)
                 eTeam.infantry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<18 && Math.abs(u.y-p.y)<18) { 
-                        u.alive = false; hit = true; 
-                        fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
+                        u.alive = false; hit = true; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
                     }
                 });
                 
-                // Hit Cavalry (2 hits KO)
                 eTeam.cavalry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { 
-                        u.hp--; hit = true; 
-                        fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
+                        u.hp--; hit = true; fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                         if (u.hp <= 0) { u.alive = false; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10}); }
                     }
                 });
                 
-                // Hit Cannon (5 hits KO)
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
                     eTeam.cannon.hp--; hit = true; 
                     if (eTeam.cannon.hp <= 0) {
-                        eTeam.cannon.alive = false; 
-                        fx.push({x: eTeam.cannon.x, y: eTeam.cannon.y, type:'boom', r: 0, life:25}); 
-                        playSound('cannon'); // Boom!
+                        eTeam.cannon.alive = false; fx.push({x: eTeam.cannon.x, y: eTeam.cannon.y, type:'boom', r: 0, life:25}); playSound('cannon');
                     } else {
-                        playSound('hitRock'); // Clink!
-                        fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
+                        playSound('hitRock'); fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                     }
                 }
 
@@ -554,35 +599,32 @@
             if(f.life <= 0) fx.splice(i,1); 
         }
 
-        // --- PHYSICS: MELEE KAVALERI ---
+        // Melee
         union.cavalry.forEach(uc => {
             if(!uc.alive) return;
             confed.infantry.forEach(ci => { if(ci.alive && Math.hypot(uc.x-ci.x, uc.y-ci.y) < 35) { ci.alive = false; fx.push({x: ci.x, y: ci.y, type:'smoke', life: 15}); }});
             confed.cavalry.forEach(cc => { if(cc.alive && Math.hypot(uc.x-cc.x, uc.y-cc.y) < 35) { cc.alive = false; uc.alive = false; fx.push({x: cc.x, y: cc.y, type:'smoke', life: 20}); }});
             if(confed.cannon.alive && Math.hypot(uc.x-confed.cannon.x, uc.y-confed.cannon.y) < 45) { confed.cannon.alive = false; fx.push({x: confed.cannon.x, y: confed.cannon.y, type:'smoke', life: 25}); playSound('cannon'); }
         });
-        
         confed.cavalry.forEach(cc => {
             if(!cc.alive) return;
             union.infantry.forEach(ui => { if(ui.alive && Math.hypot(cc.x-ui.x, cc.y-ui.y) < 35) { ui.alive = false; fx.push({x: ui.x, y: ui.y, type:'smoke', life: 15}); }});
             if(union.cannon.alive && Math.hypot(cc.x-union.cannon.x, cc.y-union.cannon.y) < 45) { union.cannon.alive = false; fx.push({x: union.cannon.x, y: union.cannon.y, type:'smoke', life: 25}); playSound('cannon'); }
         });
 
-        // --- CEK GAME OVER ATAU SERI ---
+        // Win Cond
         let uInfAlive = union.infantry.some(u=>u.alive); let uCavAlive = union.cavalry.some(u=>u.alive);
         let cInfAlive = confed.infantry.some(u=>u.alive); let cCavAlive = confed.cavalry.some(u=>u.alive);
         
         let uAlive = union.cannon.alive || uInfAlive || uCavAlive;
         let cAlive = confed.cannon.alive || cInfAlive || cCavAlive;
         
-        // Deteksi Seri (Tinggal meriam tapi tidak punya peluru)
         let uOnlyCannon = union.cannon.alive && !uInfAlive && !uCavAlive;
         let cOnlyCannon = confed.cannon.alive && !cInfAlive && !cCavAlive;
         let isDraw = uOnlyCannon && cOnlyCannon && union.cannon.ammo === 0 && confed.cannon.ammo === 0;
         
         if(!uAlive || !cAlive || isDraw) {
             gameOver = true;
-            
             const overlay = document.getElementById('game-over-overlay');
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
@@ -590,7 +632,7 @@
             const btn = document.getElementById('btn-action');
             
             if (isDraw) {
-                playSound('victory'); // Dihitung menang
+                playSound('victory'); 
                 isVictory = true; 
                 msg.innerHTML = "DRAW!";
                 msg.style.textShadow = "3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 8px 0 #935116";
@@ -669,6 +711,15 @@
     }
 
     function render() {
+        // Skala Layar Murni dari Konteks Canvas (Ini yang buat presisi)
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        ctx.fillStyle = "#050505"; ctx.fillRect(0,0, canvas.width, canvas.height); // Black bars (Letterbox)
+        
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.scale(scale, scale);
+        
+        // AREA 1280 x 720 (Hanya Menggambar Peta Internal Saja)
         if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720);
         else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
         
@@ -698,12 +749,10 @@
             ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.beginPath(); ctx.ellipse(u.x, u.y, type==='cavalry'?25:(type==='cannon'?30:12), type==='cannon'?12:6, 0, 0, Math.PI*2); ctx.fill();
             
-            // DRAW HP BAR UNTUK UNIT DENGAN ARMOR (Cavalry & Cannon)
             if (u.maxHp && u.maxHp > 1) {
-                let barW = type==='cannon' ? 40 : 25;
-                let yOff = type==='cannon' ? -35 : -65;
-                ctx.fillStyle = "#e74c3c"; ctx.fillRect(u.x - barW/2, u.y + yOff, barW, 4);
-                ctx.fillStyle = "#2ecc71"; ctx.fillRect(u.x - barW/2, u.y + yOff, barW * (u.hp/u.maxHp), 4);
+                let barW = type==='cannon' ? 40 : 25; let yOff = type==='cannon' ? -35 : -65;
+                ctx.fillStyle = "#e74c3c"; ctx.fillRect(u.x - barW/2, u.y + yOff, barW, 5);
+                ctx.fillStyle = "#2ecc71"; ctx.fillRect(u.x - barW/2, u.y + yOff, barW * (u.hp/u.maxHp), 5);
             }
 
             if(type === 'cannon') {
@@ -753,6 +802,8 @@
                 drawVoxel(f.x, f.y, 5, 5, 5, "#7f8c8d");
             }
         });
+
+        ctx.restore(); // Akhir blok 1280x720 Native Scaling
     }
 
     function loop() { update(); render(); requestAnimationFrame(loop); }
