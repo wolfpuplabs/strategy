@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     
-    <title>North & South: D-Pad Fix & Weather</title>
+    <title>North & South: Pro Arcade Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
@@ -67,7 +67,7 @@
         .dpad { display: grid; grid-template-columns: 90px 90px 90px; grid-template-rows: 90px 90px 90px; gap: 12px; }
         .dpad-btn {
             background: linear-gradient(to bottom, #ffffff, #dcdde1); border: 5px solid #2c3e50; border-radius: 25px; 
-            display: flex; justify-content: center; align-items: center; font-size: 36px; color: #2c3e50; cursor: pointer; box-shadow: 0 8px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
+            display: flex; justify-content: center; align-items: center; color: #2c3e50; cursor: pointer; box-shadow: 0 8px 0 #2c3e50, 0 10px 10px rgba(0,0,0,0.3);
         }
         .dpad-btn:active, .dpad-btn.active { transform: translateY(8px); box-shadow: 0 0 0 #2c3e50; background: #f1c40f; color: #111; }
         .empty { visibility: hidden; }
@@ -130,7 +130,6 @@
         .modal-show { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
         
-        /* ISI MODAL GAME OVER */
         #game-over-modal { width: 350px; }
         #game-over-msg { font-size: 50px; margin: 0 0 10px 0; color: #fff; transform: rotate(-3deg); line-height: 1.1; }
         .msg-sub {
@@ -143,7 +142,6 @@
         }
         .btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
 
-        /* ISI MODAL KONFIRMASI SURRENDER */
         #confirm-modal { width: 300px; background: linear-gradient(to bottom, #e74c3c, #c0392b); border-color: #78281f; }
         #confirm-modal::before { border-color: rgba(255,255,255,0.2); }
         #confirm-modal h2 { font-size: 35px; color: white; margin: 0 0 15px 0; text-shadow: 2px 2px 0 #78281f; transform: rotate(-2deg); }
@@ -157,31 +155,28 @@
         .btn-no { background: linear-gradient(to bottom, #f1c40f, #f39c12); box-shadow: 0 6px 0 #d35400; }
         .btn-half:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
 
-        /* RESPONSIVE HP FIX (Bigger Buttons) */
         @media (max-width: 850px) {
             .hud { width: 70%; left: 60%; }
             .badge { padding: 5px 15px; font-size: 12px; }
             .stage-badge { font-size: 16px; padding: 5px 20px; }
-            .controls-left, .controls-right { bottom: 20px; }
+            .controls-left, .controls-right { bottom: 15px; }
             
-            /* D-PAD DIPERBESAR & DIRENGGANGKAN */
+            /* D-Pad diperbesar */
             .dpad { grid-template-columns: 75px 75px 75px; grid-template-rows: 75px 75px 75px; gap: 15px; }
-            .dpad-btn { font-size: 28px; border-width: 4px; box-shadow: 0 6px 0 #2c3e50; border-radius: 18px; }
+            .dpad-btn { border-width: 4px; box-shadow: 0 6px 0 #2c3e50; border-radius: 18px; }
+            .dpad-btn svg { width: 32px; height: 32px; }
             
-            /* SQUAD GRID DIPERBESAR */
-            .squad-grid { width: 180px; gap: 10px; }
-            .act-btn { height: 55px; border-width: 3px; box-shadow: 0 5px 0 #1a252f; border-radius: 12px;}
-            .act-btn span { font-size: 12px; }
-            .act-btn svg { width: 24px; height: 24px; }
-            .btn-full { height: 65px; }
-            .btn-full span { font-size: 16px; }
+            .squad-grid { width: 170px; gap: 8px; }
+            .act-btn { height: 50px; border-width: 3px; box-shadow: 0 5px 0 #1a252f; border-radius: 12px;}
+            .act-btn span { font-size: 11px; }
+            .act-btn svg { width: 22px; height: 22px; }
+            .btn-full { height: 60px; }
+            .btn-full span { font-size: 15px; }
             
-            /* TOMBOL FIRE DIPERBESAR */
             .fire-btn { width: 100px; height: 100px; font-size: 26px; border-width: 5px; box-shadow: 0 8px 0 #c0392b; }
             
             #start-screen h1 { font-size: 45px; }
             #btn-start { font-size: 22px; padding: 15px 35px; border-width: 5px; box-shadow: 0 8px 0 #d35400;}
-            
             .top-controls { left: 15px; top: 15px; gap: 12px;}
             .mini-btn { width: 45px; height: 45px; font-size: 20px; border-width: 3px; box-shadow: 0 4px 0 #1a252f;}
             
@@ -203,7 +198,6 @@
         <canvas id="gameCanvas" width="1280" height="720"></canvas>
         
         <div id="game-ui">
-            <!-- EXTRA CONTROLS -->
             <div class="top-controls">
                 <div class="mini-btn" id="btn-audio" onclick="toggleAudio()">🔊</div>
                 <div class="mini-btn" id="btn-fullscreen" onclick="toggleFullScreen()">⛶</div>
@@ -220,8 +214,20 @@
 
             <div class="controls-left">
                 <div class="dpad">
-                    <div class="empty"></div><div class="dpad-btn" id="btn-up">W</div><div class="empty"></div>
-                    <div class="dpad-btn" id="btn-left">A</div><div class="dpad-btn" id="btn-down">S</div><div class="dpad-btn" id="btn-right">D</div>
+                    <div class="empty"></div>
+                    <div class="dpad-btn" id="btn-up">
+                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </div>
+                    <div class="empty"></div>
+                    <div class="dpad-btn" id="btn-left">
+                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </div>
+                    <div class="dpad-btn" id="btn-down">
+                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="dpad-btn" id="btn-right">
+                        <svg viewBox="0 0 24 24" width="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
                 </div>
             </div>
             
@@ -252,14 +258,12 @@
 
         <div class="overlay" id="overlay"></div>
         
-        <!-- MODAL GAME OVER -->
         <div class="modal" id="game-over-modal">
             <h2 id="game-over-msg">CLEARED!</h2>
             <div class="msg-sub" id="msg-sub">Get ready</div>
             <button class="btn-action" id="btn-action" onclick="handleModalAction()">NEXT STAGE</button>
         </div>
 
-        <!-- MODAL KONFIRMASI SURRENDER -->
         <div class="modal" id="confirm-modal">
             <h2>SURRENDER?</h2>
             <p>Retreat and fail this stage?</p>
@@ -281,10 +285,10 @@
     applyScale();
 
     function toggleFullScreen() {
-        playSound('click');
+        if(soundEnabled) playSound('click');
         let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if(isIOS) {
-            alert("iOS tidak mendukung tombol Fullscreen.\n\nTips: Tekan tombol 'Share' lalu 'Add to Home Screen'.");
+            alert("iOS Safari memblokir fitur tombol Fullscreen.\n\nTips: Tekan tombol 'Share' lalu pilih 'Add to Home Screen'.");
             return;
         }
         try {
@@ -296,10 +300,10 @@
         } catch(e) {}
     }
 
-    // --- AUDIO ENGINE ---
+    // --- AUDIO ENGINE (iOS FIX ULTIMATE) ---
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     let actx = null;
-    let gameHasStarted = false;
+    let audioUnlocked = false;
     let soundEnabled = true;
 
     function toggleAudio() {
@@ -308,31 +312,42 @@
         if(soundEnabled) playSound('click');
     }
 
-    function unlockAudio(e) {
-        if(e && typeof e.preventDefault === 'function') e.preventDefault();
-        if(gameHasStarted) return;
+    // Fungsi paksa unlock audio di iOS
+    function forceUnlockAudio() {
+        if(audioUnlocked) return;
         try {
-            if(!actx && AudioCtxClass) actx = new AudioCtxClass();
-            if (actx && actx.state === 'suspended') actx.resume();
-            if (!(/iPad|iPhone|iPod/.test(navigator.userAgent)) && document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(()=>{});
-            }
-            if(actx) {
-                const osc = actx.createOscillator(); const gain = actx.createGain();
-                gain.gain.value = 0; osc.connect(gain); gain.connect(actx.destination);
-                osc.start(0); osc.stop(actx.currentTime + 0.1);
-            }
-        } catch(e) {}
-        playSound('click');
-        document.getElementById('start-screen').style.display = 'none';
-        gameHasStarted = true;
+            if(!actx) actx = new AudioCtxClass();
+            if(actx.state === 'suspended') actx.resume();
+            
+            // Putar audio senyap (silent buffer)
+            const buffer = actx.createBuffer(1, 1, 22050);
+            const source = actx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(actx.destination);
+            source.start(0);
+            
+            audioUnlocked = true;
+            console.log("Audio Unlocked Successfully!");
+        } catch(e) { console.log(e); }
     }
-    
-    document.getElementById('btn-start').addEventListener('click', unlockAudio);
-    document.getElementById('btn-start').addEventListener('touchstart', unlockAudio, {passive: false});
+
+    // Tempelkan unlocker ke SEMUA interaksi sentuh pertama di layar
+    document.addEventListener('touchstart', forceUnlockAudio, {once:true, capture:true});
+    document.addEventListener('click', forceUnlockAudio, {once:true, capture:true});
+
+    // Tombol Start menyembunyikan layar awal dan mainkan suara
+    document.getElementById('btn-start').addEventListener('click', (e) => {
+        forceUnlockAudio();
+        document.getElementById('start-screen').style.display = 'none';
+        playSound('click');
+        
+        if (!(/iPad|iPhone|iPod/.test(navigator.userAgent)) && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(()=>{});
+        }
+    });
 
     function playSound(type) {
-        if (!gameHasStarted || !actx || actx.state === 'suspended' || !soundEnabled) return;
+        if (!audioUnlocked || !actx || actx.state === 'suspended' || !soundEnabled) return;
         let now = actx.currentTime;
         try {
             let o = actx.createOscillator(); let g = actx.createGain();
@@ -373,9 +388,9 @@
                     od.connect(gd); gd.connect(actx.destination); od.start(now + i*0.3); od.stop(now + i*0.3 + 0.3);
                 });
             } else if (type === 'thunder') {
-                o.type = 'sawtooth'; o.frequency.setValueAtTime(50, now); o.frequency.exponentialRampToValueAtTime(10, now + 1);
-                g.gain.setValueAtTime(0.8, now); g.gain.exponentialRampToValueAtTime(0.01, now + 1);
-                o.start(now); o.stop(now + 1);
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(50, now); o.frequency.exponentialRampToValueAtTime(10, now + 1.2);
+                g.gain.setValueAtTime(0.8, now); g.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+                o.start(now); o.stop(now + 1.2);
             }
         } catch(e) {}
     }
@@ -463,9 +478,16 @@
             obstacles.push({ x: ox, y: oy, type: Math.random() > 0.5 ? 'rock' : 'tree', radius: 25, alive: true });
         }
 
+        // Sebar awan agar tidak menumpuk
         clouds = [];
-        for(let i=0; i<5; i++) {
-            clouds.push({x: Math.random()*1280, y: Math.random()*720, w: 150+Math.random()*200, h: 80+Math.random()*80, speed: 0.2+Math.random()*0.5});
+        let section = 1280 / 4;
+        for(let i=0; i<4; i++) {
+            clouds.push({
+                x: (i * section) + Math.random()*100, 
+                y: Math.random()*500, 
+                r: 40 + Math.random()*30, 
+                speed: 0.1 + Math.random()*0.3
+            });
         }
 
         riverRipples = [];
@@ -592,10 +614,15 @@
     }
 
     function update() {
-        if(!gameHasStarted || gameOver) return;
+        if(!audioUnlocked || gameOver) return;
         frames++;
 
-        clouds.forEach(c => { c.x -= c.speed; if(c.x + c.w < 0) { c.x = 1280 + c.w; c.y = Math.random()*720; } });
+        // Awan bergerak ke kiri
+        clouds.forEach(c => { 
+            c.x -= c.speed; 
+            if(c.x + (c.r*2) < 0) { c.x = 1280 + c.r; c.y = Math.random()*600; } 
+        });
+
         riverRipples.forEach(r => { r.y += r.speed; r.alpha += 0.05; if(r.y > 720) { r.y = -20; r.x = MAP.riverX + 20 + Math.random()*(MAP.riverW-40); } });
         if(isRaining) {
             rainDrops.forEach(r => { 
@@ -698,12 +725,14 @@
                         u.alive = false; hit = true; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
                     }
                 });
+                
                 eTeam.cavalry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { 
                         u.hp--; hit = true; fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                         if (u.hp <= 0) { u.alive = false; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10}); }
                     }
                 });
+                
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
                     eTeam.cannon.hp--; hit = true; 
                     if (eTeam.cannon.hp <= 0) {
@@ -756,8 +785,7 @@
             const btn = document.getElementById('btn-action');
             
             if (isDraw) {
-                playSound('victory'); 
-                isVictory = true; 
+                playSound('victory'); isVictory = true; 
                 msg.innerHTML = "DRAW!";
                 msg.style.textShadow = "3px 3px 0 #d35400, -2px -2px 0 #d35400, 2px -2px 0 #d35400, -2px 2px 0 #d35400, 0 10px 0 #935116";
                 sub.innerText = "Out of Ammo!";
@@ -820,9 +848,34 @@
         ctx.restore();
     }
 
+    function drawShadows() {
+        // Efek Filter Blur khusus bayangan untuk kesan Profesional
+        ctx.save();
+        ctx.filter = 'blur(10px)'; 
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+
+        // Awan
+        clouds.forEach(c => {
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+            ctx.arc(c.x + c.r*0.8, c.y - c.r*0.3, c.r*0.7, 0, Math.PI*2);
+            ctx.arc(c.x - c.r*0.8, c.y - c.r*0.1, c.r*0.6, 0, Math.PI*2);
+            ctx.arc(c.x + c.r*1.5, c.y + c.r*0.2, c.r*0.5, 0, Math.PI*2);
+            ctx.fill();
+        });
+
+        // Bayangan Rintangan
+        obstacles.forEach(o => {
+            if(o.alive) {
+                ctx.beginPath(); ctx.ellipse(o.x, o.y + 5, o.radius*1.2, o.radius*0.6, 0, 0, Math.PI*2); ctx.fill();
+            }
+        });
+
+        ctx.restore(); // Matikan blur
+    }
+
     function drawObstacle(o) {
         if (!o.alive) return;
-        ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(o.x, o.y, o.radius, o.radius*0.5, 0, 0, Math.PI*2); ctx.fill();
         if (o.type === 'rock') {
             drawVoxel(o.x, o.y, 40, 20, 30, '#7f8c8d'); drawVoxel(o.x+8, o.y-12, 20, 15, 20, '#95a5a6'); drawVoxel(o.x-10, o.y-5, 25, 10, 15, '#636e72');
         } else {
@@ -836,12 +889,8 @@
         if(bgImage.complete) ctx.drawImage(bgImage, 0, 0, 1280, 720);
         else { ctx.fillStyle = "#7bc05b"; ctx.fillRect(0,0,1280,720); }
         
-        ctx.fillStyle = "rgba(0,0,0,0.15)";
-        clouds.forEach(c => {
-            ctx.beginPath(); ctx.ellipse(c.x, c.y, c.w, c.h, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(c.x - c.w*0.3, c.y + c.h*0.2, c.w*0.7, c.h*0.7, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(c.x + c.w*0.3, c.y - c.h*0.1, c.w*0.8, c.h*0.8, 0, 0, Math.PI*2); ctx.fill();
-        });
+        // Gambar Bayangan Halus
+        drawShadows();
 
         ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 3; ctx.lineCap = "round";
         riverRipples.forEach(r => {
