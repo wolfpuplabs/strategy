@@ -12,11 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     
     <style>
-        /* SCALER FIX: Menggunakan Flexbox untuk selalu menempatkan game di tengah tanpa bug koordinat */
+        /* FIX SCALER: Buang Flexbox dari body, biarkan JS yang atur posisi absolut */
         body {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             margin: 0; padding: 0; background-color: #050505;
-            display: flex; align-items: center; justify-content: center;
             overflow: hidden; touch-action: none; 
             font-family: 'Fredoka One', cursive, sans-serif;
             user-select: none; -webkit-user-select: none;
@@ -36,11 +35,10 @@
             @keyframes tilt { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } }
         }
 
-        /* WADAH UTAMA 1280x720 (Akan di-scale oleh JS) */
+        /* WADAH UTAMA 1280x720 (Akan di-scale otomatis ke tengah oleh JS) */
         #screen-scaler {
-            position: relative; width: 1280px; height: 720px; 
-            background-color: #7bc05b; transform-origin: center center;
-            flex-shrink: 0; /* Mencegah flexbox merusak ukuran */
+            position: absolute; transform-origin: top left;
+            width: 1280px; height: 720px; background-color: #7bc05b; 
         }
         canvas { position: absolute; top: 0; left: 0; width: 1280px; height: 720px; }
         #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
@@ -164,8 +162,9 @@
         }
         #btn-action:active { transform: translateY(8px) !important; box-shadow: 0 0 0 transparent !important; }
 
+        /* Responsif HP */
         @media (max-width: 850px) {
-            .hud { width: 70%; left: 60%; }
+            .hud { width: 65%; left: 65%; }
             .badge { padding: 5px 15px; font-size: 12px; }
             .stage-badge { font-size: 16px; padding: 5px 20px; }
             .controls-left, .controls-right { bottom: 10px; }
@@ -195,13 +194,16 @@
         <div class="icon">📱</div>
     </div>
 
+    <!-- WRAPPER FIX: Selalu 1280x720, diposisikan ke tengah oleh JS -->
     <div id="screen-scaler">
         <canvas id="gameCanvas" width="1280" height="720"></canvas>
         
         <div id="game-ui">
+            <!-- EXTRA CONTROLS -->
             <div class="top-controls">
                 <div class="mini-btn" id="btn-audio" onclick="toggleAudio()">🔊</div>
                 <div class="mini-btn" id="btn-fullscreen" onclick="toggleFullScreen()">⛶</div>
+                <!-- BENDERA PUTIH (SURRENDER) -->
                 <div class="mini-btn danger" id="btn-surrender" onclick="surrenderGame()">
                     <svg viewBox="0 0 448 512" width="18" fill="currentColor">
                         <path d="M48 24C48 10.7 37.3 0 24 0S0 10.7 0 24V64 352 488c0 13.3 10.7 24 24 24s24-10.7 24-24V352H384c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48V24z"/>
@@ -256,17 +258,30 @@
     </div>
 
 <script>
-    // --- FLEX SCALER (ANTI ERROR iOS) ---
+    // --- SCALER FIX JS ---
     function applyScale() {
         const scaler = document.getElementById('screen-scaler');
         const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
         scaler.style.transform = `scale(${scale})`;
+        
+        // Posisikan ke tengah (Letterboxing) menggunakan absolute positioning JS
+        const leftOffset = (window.innerWidth - (1280 * scale)) / 2;
+        const topOffset = (window.innerHeight - (720 * scale)) / 2;
+        scaler.style.left = `${leftOffset}px`;
+        scaler.style.top = `${topOffset}px`;
     }
     window.addEventListener('resize', applyScale);
-    applyScale();
+    applyScale(); // Panggil segera
 
+    // --- FULLSCREEN API ---
     function toggleFullScreen() {
         playSound('click');
+        let isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if(isIOS) {
+            alert("Apple iOS memblokir fitur tombol Fullscreen di Safari.\n\nUntuk bermain Layar Penuh 100%, tekan tombol 'Share' (Bagikan) di bawah Safari, lalu pilih 'Add to Home Screen' (Tambah ke Layar Utama). Buka dari ikon baru tersebut!");
+            return;
+        }
+
         try {
             if (!document.fullscreenElement) {
                 if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e=>console.log(e));
@@ -296,7 +311,10 @@
             if(!actx && AudioCtxClass) actx = new AudioCtxClass();
             if (actx && actx.state === 'suspended') actx.resume();
             
-            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+            // Coba fullscreen otomatis khusus Android
+            if (!(/iPad|iPhone|iPod/.test(navigator.userAgent))) {
+                if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+            }
 
             if(actx) {
                 const osc = actx.createOscillator(); const gain = actx.createGain();
@@ -458,6 +476,7 @@
         confed = { color: '#bdc3c7', pants: '#7f8c8d', cannon: { x: 1180, y: 350, alive: true, cd: 0, speed: enemySpd, frame:0, ammo: 5, hp: 5, maxHp: 5 }, infantry: [], cavalry: [], aiState: 'infantry', aiTimer: 0 };
         
         document.getElementById('ammo-badge').innerText = union.cannon.ammo;
+        document.getElementById('btn-can').style.opacity = 1;
         projectiles = []; fx = []; generateObstacles(3 + currentStage); 
 
         initTeam(union, 250, 1, 6, 3); initTeam(confed, 1030, -1, extraInf, extraCav); 
@@ -466,12 +485,10 @@
 
     startStage(1);
 
-    // --- FUNGSI BENDERA PUTIH ---
     window.surrenderGame = function() {
         if(gameOver) return;
         playSound('defeat');
-        gameOver = true;
-        isVictory = false;
+        gameOver = true; isVictory = false;
         
         const overlay = document.getElementById('game-over-overlay');
         const modal = document.getElementById('game-over-modal');
@@ -486,9 +503,7 @@
         btn.style.background = "linear-gradient(to bottom, #e74c3c, #c0392b)";
         btn.style.boxShadow = "0 8px 0 #78281f"; btn.style.borderColor = "#78281f";
         
-        overlay.style.display = "block";
-        modal.style.display = "block";
-        modal.classList.add('modal-show');
+        overlay.style.display = "block"; modal.style.display = "block"; modal.classList.add('modal-show');
     };
 
     window.handleModalAction = function() {
@@ -527,6 +542,7 @@
                 
                 if (isUnion) {
                     document.getElementById('ammo-badge').innerText = cannon.ammo;
+                    if (cannon.ammo === 0) document.getElementById('btn-can').style.opacity = 0.5; 
                 }
             } else if (isUnion && keys.space) {
                 playSound('empty'); cannon.cd = 30;
@@ -635,12 +651,14 @@
                         u.alive = false; hit = true; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10});
                     }
                 });
+                
                 eTeam.cavalry.forEach(u => { 
                     if(!hit && u.alive && Math.abs(u.x-p.x)<25 && Math.abs(u.y-p.y)<25) { 
                         u.hp--; hit = true; fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                         if (u.hp <= 0) { u.alive = false; fx.push({x: u.x, y: u.y, type: 'smoke', life: 10}); }
                     }
                 });
+                
                 if(!hit && eTeam.cannon.alive && Math.abs(eTeam.cannon.x-p.x)<45 && Math.abs(eTeam.cannon.y-p.y)<45) { 
                     eTeam.cannon.hp--; hit = true; 
                     if (eTeam.cannon.hp <= 0) {
@@ -649,6 +667,7 @@
                         playSound('hitRock'); fx.push({x: p.x, y: p.y, type: 'flash', life: 5});
                     }
                 }
+
                 if(hit) { projectiles.splice(i, 1); } 
                 else if(p.life <= 0) projectiles.splice(i, 1);
             }
@@ -687,6 +706,7 @@
         
         if(!uAlive || !cAlive || isDraw) {
             gameOver = true;
+            
             const overlay = document.getElementById('game-over-overlay');
             const modal = document.getElementById('game-over-modal');
             const msg = document.getElementById('game-over-msg');
